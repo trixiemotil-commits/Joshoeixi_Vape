@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+:root {
+  font-family: 'Poppins', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: clamp(14px, 2.2vw, 16px);
+  line-height: 1.5;
+  font-weight: 400;
+  color: #3a1218;
+  background: #E8D8C4;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: linear-gradient(160deg, #e4cfc0 0%, #ddc9b8 50%, #d4bfae 100%);
+}
+
+#root {
+  min-height: 100vh;
+}
