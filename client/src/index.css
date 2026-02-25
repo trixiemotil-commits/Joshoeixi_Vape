@@ -19,6 +19,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background: linear-gradient(160deg, #e4cfc0 0%, #ddc9b8 50%, #d4bfae 100%);
+  overflow-x: hidden;
 }
 
 #root {

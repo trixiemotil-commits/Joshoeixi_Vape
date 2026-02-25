@@ -93,7 +93,7 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeSection, setActiveSection] = useState('dashboard')
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth > 980)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isStockModalOpen, setIsStockModalOpen] = useState(false)
@@ -814,6 +814,16 @@ function App() {
   const onToggleSidebar = () => {
     setIsSidebarOpen((current) => !current)
   }
+
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth <= 980) {
+        setIsSidebarOpen(false)
+      }
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   const onSectionSelect = (tabKey) => {
     setActiveSection(tabKey)
