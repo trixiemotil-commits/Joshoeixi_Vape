@@ -2,15 +2,46 @@ const express = require('express');
 const cors = require('cors');
 
 const app = express();
-const port = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000;
+
+/**
+ * =========================
+ * CORS CONFIGURATION
+ * =========================
+ * Allows:
+ * - Local development (Vite)
+ * - Deployed Vercel frontend
+ */
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'https://joshoeixi-vape-official.vercel.app',
+];
 
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
-  }),
+    origin: function (origin, callback) {
+      // Allow requests with no origin (Postman, server-to-server)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error('CORS not allowed from this origin'));
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type'],
+  })
 );
+
 app.use(express.json());
 
+/**
+ * =========================
+ * IN-MEMORY INVENTORY
+ * =========================
+ */
 let inventory = [
   {
     id: 1,
@@ -64,71 +95,60 @@ let inventory = [
   },
 ];
 
-const nextId = () => (inventory.length ? Math.max(...inventory.map((item) => item.id)) + 1 : 1);
+/**
+ * =========================
+ * HELPERS
+ * =========================
+ */
+const nextId = () =>
+  inventory.length ? Math.max(...inventory.map((i) => i.id)) + 1 : 1;
 
 const toNumber = (value) => Number(value);
 
 const buildItemResponse = (item) => {
   const rawPrice = toNumber(item.rawPrice);
   const sellingPrice = toNumber(item.sellingPrice);
-  const profit = sellingPrice - rawPrice;
 
   return {
     ...item,
     rawPrice,
     sellingPrice,
     minStockAlert: toNumber(item.minStockAlert),
-    profit,
+    profit: sellingPrice - rawPrice,
     price: sellingPrice,
   };
 };
 
 const validateAndNormalizeItem = ({ body, currentItem, isCreate }) => {
-  const name = body.name !== undefined ? body.name.toString().trim() : currentItem?.name;
-  const brand = body.brand !== undefined ? body.brand.toString().trim() : currentItem?.brand;
-  const category = body.category !== undefined ? body.category.toString().trim() : currentItem?.category;
-
-  const stockSource = body.stock !== undefined ? body.stock : currentItem?.stock;
-  const rawPriceSource = body.rawPrice !== undefined ? body.rawPrice : currentItem?.rawPrice;
-  const sellingPriceSource =
-    body.sellingPrice !== undefined
-      ? body.sellingPrice
-      : body.price !== undefined
-        ? body.price
-        : currentItem?.sellingPrice;
-  const minStockAlertSource =
-    body.minStockAlert !== undefined ? body.minStockAlert : currentItem?.minStockAlert ?? 10;
+  const name = body.name?.toString().trim() ?? currentItem?.name;
+  const brand = body.brand?.toString().trim() ?? currentItem?.brand;
+  const category = body.category?.toString().trim() ?? currentItem?.category;
 
   if (!name || !brand || !category) {
     return { error: 'Name, brand, and category are required.' };
   }
 
-  const stock = toNumber(stockSource);
-  const rawPrice = toNumber(rawPriceSource);
-  const sellingPrice = toNumber(sellingPriceSource);
-  const minStockAlert = toNumber(minStockAlertSource);
+  const stock = toNumber(body.stock ?? currentItem?.stock);
+  const rawPrice = toNumber(body.rawPrice ?? currentItem?.rawPrice);
+  const sellingPrice = toNumber(
+    body.sellingPrice ?? body.price ?? currentItem?.sellingPrice
+  );
+  const minStockAlert = toNumber(
+    body.minStockAlert ?? currentItem?.minStockAlert ?? 10
+  );
 
-  if (!Number.isFinite(stock) || stock < 0) {
-    return { error: 'Stock must be a valid non-negative number.' };
+  if (
+    !Number.isFinite(stock) ||
+    !Number.isFinite(rawPrice) ||
+    !Number.isFinite(sellingPrice) ||
+    stock < 0 ||
+    rawPrice < 0 ||
+    sellingPrice < rawPrice
+  ) {
+    return { error: 'Invalid numeric values.' };
   }
 
-  if (!Number.isFinite(rawPrice) || rawPrice < 0) {
-    return { error: 'Raw price must be a valid non-negative number.' };
-  }
-
-  if (!Number.isFinite(sellingPrice) || sellingPrice < 0) {
-    return { error: 'Selling price must be a valid non-negative number.' };
-  }
-
-  if (sellingPrice < rawPrice) {
-    return { error: 'Selling price must be greater than or equal to raw price.' };
-  }
-
-  if (!Number.isFinite(minStockAlert) || minStockAlert < 0) {
-    return { error: 'Minimum stock alert must be a valid non-negative number.' };
-  }
-
-  if (isCreate && (body.rawPrice === undefined || (body.sellingPrice === undefined && body.price === undefined))) {
+  if (isCreate && (body.rawPrice === undefined || body.sellingPrice === undefined)) {
     return { error: 'Raw price and selling price are required.' };
   }
 
@@ -146,81 +166,84 @@ const validateAndNormalizeItem = ({ body, currentItem, isCreate }) => {
   };
 };
 
+/**
+ * =========================
+ * ROUTES
+ * =========================
+ */
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', service: 'Joshoeixi Vape API' });
 });
 
 app.get('/api/items', (req, res) => {
-  const query = (req.query.q || '').toString().trim().toLowerCase();
+  const q = (req.query.q || '').toLowerCase();
 
-  if (!query) {
-    return res.json(inventory.map(buildItemResponse));
-  }
+  const data = q
+    ? inventory.filter((item) =>
+        [item.name, item.brand, item.category].some((f) =>
+          f.toLowerCase().includes(q)
+        )
+      )
+    : inventory;
 
-  const filtered = inventory.filter((item) => {
-    return [item.name, item.brand, item.category].some((field) =>
-      field.toLowerCase().includes(query),
-    );
-  });
-
-  return res.json(filtered.map(buildItemResponse));
+  res.json(data.map(buildItemResponse));
 });
 
 app.post('/api/items', (req, res) => {
-  const validation = validateAndNormalizeItem({ body: req.body, isCreate: true });
+  const validation = validateAndNormalizeItem({
+    body: req.body,
+    isCreate: true,
+  });
 
   if (validation.error) {
     return res.status(400).json({ error: validation.error });
   }
 
-  const newItem = {
-    id: nextId(),
-    ...validation.item,
-  };
-
+  const newItem = { id: nextId(), ...validation.item };
   inventory.push(newItem);
-  return res.status(201).json(buildItemResponse(newItem));
+
+  res.status(201).json(buildItemResponse(newItem));
 });
 
 app.put('/api/items/:id', (req, res) => {
   const id = Number(req.params.id);
-  const index = inventory.findIndex((item) => item.id === id);
+  const index = inventory.findIndex((i) => i.id === id);
 
   if (index === -1) {
     return res.status(404).json({ error: 'Item not found.' });
   }
 
-  const current = inventory[index];
   const validation = validateAndNormalizeItem({
     body: req.body,
-    currentItem: current,
-    isCreate: false,
+    currentItem: inventory[index],
   });
 
   if (validation.error) {
     return res.status(400).json({ error: validation.error });
   }
 
-  inventory[index] = {
-    ...current,
-    ...validation.item,
-  };
-
-  return res.json(buildItemResponse(inventory[index]));
+  inventory[index] = { ...inventory[index], ...validation.item };
+  res.json(buildItemResponse(inventory[index]));
 });
 
 app.delete('/api/items/:id', (req, res) => {
   const id = Number(req.params.id);
-  const previousLength = inventory.length;
-  inventory = inventory.filter((item) => item.id !== id);
+  const len = inventory.length;
 
-  if (inventory.length === previousLength) {
+  inventory = inventory.filter((i) => i.id !== id);
+
+  if (inventory.length === len) {
     return res.status(404).json({ error: 'Item not found.' });
   }
 
-  return res.status(204).send();
+  res.status(204).send();
 });
 
-app.listen(port, () => {
-  console.log(`Joshoeixi Vape API running on http://localhost:${port}`);
+/**
+ * =========================
+ * START SERVER
+ * =========================
+ */
+app.listen(PORT, () => {
+  console.log(`🚀 Joshoeixi Vape API running on port ${PORT}`);
 });
