@@ -153,7 +153,7 @@
             position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:min(100%,430px);
             background:rgba(244,236,224,0.97); display:flex; justify-content:space-around;
             padding:6px 16px calc(8px + var(--safe-bottom)); border-top:1px solid rgba(93,58,44,0.14);
-            -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); z-index:100;
+            backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); z-index:100;
         }
         .nav-item {
             display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -174,14 +174,21 @@
         }
 
         /* MODALS */
-        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:500; align-items:flex-end; justify-content:center; pointer-events:none; }
-        .modal.active { pointer-events:all; }
-        .modal.active { display:flex; }
+        .modal {
+            display:flex; position:fixed; inset:0; z-index:500;
+            align-items:flex-end; justify-content:center; pointer-events:none;
+            background:rgba(0,0,0,0); transition:background .28s ease;
+        }
+        .modal.active { background:rgba(0,0,0,0.45); pointer-events:all; }
+        .modal.closing { background:rgba(0,0,0,0); pointer-events:none; }
         .modal-sheet {
             background:#f5efe8; width:min(100%,430px); max-height:calc(100dvh - 60px - var(--safe-top));
             overflow-y:auto; border-radius:28px 28px 0 0; padding:0 20px calc(16px + var(--safe-bottom));
-            animation:slideUp .28s cubic-bezier(.32,.72,0,1); pointer-events:all;
+            transform:translateY(100%); transition:transform .32s cubic-bezier(.32,.72,0,1);
+            pointer-events:all; will-change:transform;
         }
+        .modal.active .modal-sheet { transform:translateY(0); }
+        .modal.closing .modal-sheet { transform:translateY(100%); }
         @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
         .modal-handle { width:36px; height:4px; background:rgba(93,58,44,0.25); border-radius:2px; margin:12px auto 0; }
         .modal-hdr {
@@ -212,23 +219,24 @@
         .toggle-group.two-col   { grid-template-columns:1fr 1fr; }
         .toggle-group.three-col { grid-template-columns:1fr 1fr 1fr; }
         .toggle-opt {
-            display:flex; flex-direction:row; align-items:center; justify-content:center;
-            min-height:54px; padding:10px 0px 10px 0px; gap:8px; 
-            border-radius:var(--radius-md); border:1px solid rgba(145,08,80,0.3);
+            display:flex; align-items:center; justify-content:center;
+            min-height:54px; padding:10px 12px;
+            border-radius:var(--radius-md); border:1px solid rgba(145,108,80,0.3);
             background:#ede5d4; color:var(--ink); font-size:13px; font-weight:500;
-            line-height:1; cursor:pointer; -webkit-user-select:none; user-select:none;
+            line-height:1; cursor:pointer; user-select:none; -webkit-user-select:none;
         }
         .toggle-opt input { display:none; }
-        /* The inner wrapper centers icon+text together as one unit */
+        /* icon + text sit side-by-side, the whole group is centered in the button */
         .toggle-inner {
-            display:inline-flex; flex-direction:row; align-items:center;
-            justify-content:center; gap:8px; pointer-events:none; width:100%;
+            display:flex; flex-direction:row; align-items:center;
+            justify-content:center; gap:8px; pointer-events:none;
+            width:100%;
         }
         .toggle-inner svg {
-            width:26px; height:26px; flex-shrink:0; display:block;
+            width:18px; height:18px; flex-shrink:0; display:block;
         }
         .toggle-inner span {
-            font-size:13px; font-weight:500; white-space:nowrap; line-height:1; display:inline-block;
+            font-size:13px; font-weight:500; white-space:nowrap; line-height:1;
         }
         /* Category & payment */
         .toggle-opt:has(input[name="category"]:checked),
@@ -312,17 +320,43 @@
         .balance-display .bd-value { font-size:16px; font-weight:700; color:var(--ink); }
 
         /* Confirm dialog */
-        .confirm-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:999; align-items:center; justify-content:center; }
-        .confirm-overlay.active { display:flex; }
-        .confirm-dialog { background:#f5efe8; border-radius:20px; padding:28px 24px 20px; width:300px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.25); }
+        .confirm-overlay {
+            display:flex; position:fixed; inset:0; background:rgba(0,0,0,0); z-index:999;
+            align-items:center; justify-content:center; pointer-events:none;
+            transition:background .22s ease;
+        }
+        .confirm-overlay.active { background:rgba(0,0,0,0.4); pointer-events:all; }
+        .confirm-overlay.closing { background:rgba(0,0,0,0); pointer-events:none; }
+        .confirm-dialog {
+            background:#f5efe8; border-radius:20px; padding:28px 24px 20px; width:300px;
+            text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.25);
+            transform:scale(0.85) translateY(12px); opacity:0;
+            transition:transform .26s cubic-bezier(.34,1.56,.64,1), opacity .22s ease;
+        }
+        .confirm-overlay.active .confirm-dialog { transform:scale(1) translateY(0); opacity:1; }
+        .confirm-overlay.closing .confirm-dialog { transform:scale(0.85) translateY(12px); opacity:0; }
         .confirm-dialog p { font-size:16px; font-weight:500; color:var(--ink); margin-bottom:20px; }
         .confirm-btns { display:flex; gap:10px; }
         .btn-yes { flex:1; height:46px; background:var(--success); color:#fff; border:none; border-radius:var(--radius-md); font-size:15px; font-weight:600; font-family:'Poppins',sans-serif; cursor:pointer; }
         .btn-no  { flex:1; height:46px; background:var(--danger);  color:#fff; border:none; border-radius:var(--radius-md); font-size:15px; font-weight:600; font-family:'Poppins',sans-serif; cursor:pointer; }
 
         /* Toast */
-        .toast { position:fixed; bottom:calc(90px + var(--safe-bottom) + 12px); left:50%; transform:translateX(-50%) translateY(20px); background:#221615; color:#fff; padding:12px 20px; border-radius:50px; font-size:13px; font-weight:500; opacity:0; transition:all .3s ease; z-index:9999; white-space:nowrap; pointer-events:none; }
-        .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+        .toast {
+            position:fixed; bottom:calc(90px + var(--safe-bottom) + 16px);
+            left:50%; transform:translateX(-50%) translateY(16px) scale(0.92);
+            background:#221615; color:#fff; padding:12px 22px; border-radius:50px;
+            font-size:13px; font-weight:500; letter-spacing:0.01em;
+            opacity:0; z-index:9999; white-space:nowrap; pointer-events:none;
+            box-shadow:0 8px 28px rgba(0,0,0,0.28);
+            transition:opacity .22s ease, transform .28s cubic-bezier(.34,1.4,.64,1);
+        }
+        .toast.show {
+            opacity:1; transform:translateX(-50%) translateY(0) scale(1);
+        }
+        .toast.hide {
+            opacity:0; transform:translateX(-50%) translateY(8px) scale(0.94);
+            transition:opacity .18s ease, transform .18s ease;
+        }
 
         button { -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
         /* Top customers */
@@ -617,6 +651,12 @@
         </div>
         <div class="form-group"><label>Customer Name</label><input type="text" id="editCustomerName" class="form-input" placeholder="Customer name"></div>
         <div class="form-group">
+            <label>Items</label>
+            <div id="editSaleItemsDisplay" class="sale-items-list"></div>
+            <div id="editItemPicker"></div>
+        </div>
+        <div class="total-row"><span class="tr-label">Total Amount</span><span class="tr-value" id="editSaleTotal">₱0.00</span></div>
+        <div class="form-group">
             <label>Status</label>
             <div class="toggle-group three-col">
                 <label class="toggle-opt"><input type="radio" name="editStatus" value="completed" onchange="toggleEditPayment()"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Completed</span></span></label>
@@ -624,7 +664,7 @@
                 <label class="toggle-opt"><input type="radio" name="editStatus" value="loan" onchange="toggleEditPayment()"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>Loan</span></span></label>
             </div>
         </div>
-        <div id="editPaymentSection">
+        <div id="editPaymentSection" style="display:none;">
             <div class="form-group">
                 <label>Payment Type</label>
                 <div class="toggle-group two-col">
@@ -632,11 +672,18 @@
                     <label class="toggle-opt"><input type="radio" name="editPaymentType" value="gcash"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg><span>GCash</span></span></label>
                 </div>
             </div>
+            <div class="price-row">
+                <div class="form-group"><label>Amount Paid (₱)</label><input type="number" id="editAmountPaid" class="form-input" step="0.01" placeholder="0.00" oninput="calcEditChange()"></div>
+                <div class="form-group"><label>Change</label><input type="text" id="editChangeAmount" class="form-input readonly-field" placeholder="₱0.00" readonly></div>
+            </div>
         </div>
         <div id="editLoanSection" style="display:none;">
             <div class="loan-section">
                 <div class="loan-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Loan Balance</div>
-                <div class="form-group" style="margin-bottom:0;"><label>Remaining Loan (₱)</label><input type="number" id="editLoanAmount" class="form-input" step="0.01" placeholder="0.00"></div>
+                <div class="price-row" style="margin-bottom:0;">
+                    <div class="form-group" style="margin-bottom:0;"><label>Paid Now (₱)</label><input type="number" id="editLoanPaidNow" class="form-input" step="0.01" placeholder="0.00" oninput="calcEditLoanBalance()"></div>
+                    <div class="form-group" style="margin-bottom:0;"><label>Remaining</label><input type="text" id="editLoanAmount" class="form-input readonly-field" placeholder="₱0.00" readonly style="color:#dc2626;font-weight:700;background:#fff4f4;"></div>
+                </div>
             </div>
         </div>
         <input type="hidden" id="editSaleId">
@@ -710,8 +757,17 @@ function init() {
 
 function showToast(msg) {
     const t = document.getElementById('toast');
-    t.textContent = msg; t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2600);
+    t.classList.remove('show', 'hide');
+    t.textContent = msg;
+    // Force reflow so transition fires fresh
+    void t.offsetWidth;
+    t.classList.add('show');
+    clearTimeout(t._hideTimer);
+    t._hideTimer = setTimeout(() => {
+        t.classList.remove('show');
+        t.classList.add('hide');
+        setTimeout(() => t.classList.remove('hide'), 200);
+    }, 2400);
 }
 
 function switchPage(page, el) {
@@ -719,10 +775,9 @@ function switchPage(page, el) {
     if (el) el.classList.add('active');
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(page + '-page').classList.add('active');
-    // Always reset to top when switching tabs
+    // Always scroll to top of content
     const mc = document.querySelector('.main-content');
-    if (mc) mc.scrollTop = 0;
-    window.scrollTo(0, 0);
+    if (mc) mc.scrollTo({ top: 0, behavior: 'instant' });
     if (page === 'dashboard') updateDashboard();
     if (page === 'products')  displayProducts();
     if (page === 'sales')     displaySales();
@@ -946,38 +1001,14 @@ function updateSalesStats() {
 function filterSalesByStatus(status,btn) { currentSaleStatus=status; document.querySelectorAll('#sales-page .cat-tabs .tab-btn').forEach(b=>b.classList.remove('active')); if(btn)btn.classList.add('active'); displaySales(); }
 
 function openAddSaleModal() {
-    const saleModal = document.getElementById('saleModal');
-    if (!saleModal) return;
-
-    // Open immediately, then initialize content safely.
-    saleModal.classList.add('active');
     saleItems=[];
-
-    const customerName = document.getElementById('customerName');
-    const amountPaid = document.getElementById('amountPaid');
-    const changeAmount = document.getElementById('changeAmount');
-    const loanPaidNow = document.getElementById('loanPaidNow');
-    const loanBalance = document.getElementById('loanBalance');
-    const paymentSection = document.getElementById('paymentSection');
-    const loanSection = document.getElementById('loanSection');
-
-    if (customerName) customerName.value='';
-    if (amountPaid) amountPaid.value='';
-    if (changeAmount) changeAmount.value='';
-    if (loanPaidNow) loanPaidNow.value='';
-    if (loanBalance) loanBalance.value='';
-
-    const statusCompleted = document.querySelector('input[name="status"][value="completed"]');
-    const paymentCash = document.querySelector('input[name="paymentType"][value="cash"]');
-    if (statusCompleted) statusCompleted.checked=true;
-    if (paymentCash) paymentCash.checked=true;
-
-    if (paymentSection) paymentSection.style.display='block';
-    if (loanSection) loanSection.style.display='none';
-
-    renderSaleItems();
-    showItemPicker();
-    updateSaleTotal();
+    document.getElementById('customerName').value=''; document.getElementById('amountPaid').value='';
+    document.getElementById('changeAmount').value=''; document.getElementById('loanPaidNow').value=''; document.getElementById('loanBalance').value='';
+    document.querySelector('input[name="status"][value="completed"]').checked=true;
+    document.querySelector('input[name="paymentType"][value="cash"]').checked=true;
+    document.getElementById('paymentSection').style.display='block'; document.getElementById('loanSection').style.display='none';
+    renderSaleItems(); showItemPicker(); updateSaleTotal();
+    document.getElementById('saleModal').classList.add('active');
 }
 
 function showItemPicker() {
@@ -1025,8 +1056,7 @@ function updateSaleTotal() {
 }
 
 function togglePaymentSection() {
-    const rawStatus=document.querySelector('input[name="status"]:checked').value;
-    const status=rawStatus.charAt(0).toUpperCase()+rawStatus.slice(1);
+    const status=document.querySelector('input[name="status"]:checked').value.toLowerCase();
     document.getElementById('paymentSection').style.display=status==='completed'?'block':'none';
     document.getElementById('loanSection').style.display=status==='loan'?'block':'none';
 }
@@ -1075,27 +1105,35 @@ function openEditSaleModal(id) {
     const s=sales.find(x=>x.id===id); if(!s) return;
     document.getElementById('editSaleId').value=id;
     document.getElementById('editCustomerName').value=s.customer;
-    // Load existing items into editSaleItems (deep copy)
+    // Deep copy items
     editSaleItems=s.items.map(i=>({...i}));
     editPickerProductId=null; editPickerVariant=null; editPickerQty=1;
     renderEditSaleItems();
     showEditItemPicker();
     updateEditSaleTotal();
-    // Set status (try lowercase match)
+    // Status
     const statusVal=s.status.toLowerCase();
-    const sr=document.querySelector(`input[name="editStatus"][value="${statusVal}"]`); if(sr) sr.checked=true;
-    // Set payment type (try lowercase match)
-    const ptVal=(s.paymentType||'').toLowerCase();
-    const pr=document.querySelector(`input[name="editPaymentType"][value="${ptVal}"]`); if(pr) pr.checked=true;
-    document.getElementById('editLoanAmount').value=s.loanBalance||0;
-    document.getElementById('editAmountPaid').value=s.amountPaid||'';
-    calcEditChange();
+    const sr=document.querySelector(`input[name="editStatus"][value="${statusVal}"]`);
+    if(sr) sr.checked=true;
     toggleEditPayment();
+    // Payment type
+    const ptVal=(s.paymentType||'cash').toLowerCase();
+    const pr=document.querySelector(`input[name="editPaymentType"][value="${ptVal}"]`);
+    if(pr) pr.checked=true;
+    // Amount paid
+    const editAmtPaid=document.getElementById('editAmountPaid');
+    if(editAmtPaid) editAmtPaid.value=s.amountPaid||'';
+    // Loan
+    const editLoanPaidNow=document.getElementById('editLoanPaidNow');
+    if(editLoanPaidNow) editLoanPaidNow.value=s.loanPaidNow||0;
+    calcEditChange(); calcEditLoanBalance();
     document.getElementById('editSaleModal').classList.add('active');
 }
 
 function renderEditSaleItems() {
-    document.getElementById('editSaleItemsDisplay').innerHTML=editSaleItems.map((item,i)=>`
+    const el=document.getElementById('editSaleItemsDisplay');
+    if(!el) return;
+    el.innerHTML=editSaleItems.map((item,i)=>`
         <div class="sale-item-chip">
             <div class="sic-left">
                 <div class="sic-name">${item.name}</div>
@@ -1106,8 +1144,7 @@ function renderEditSaleItems() {
         </div>`).join('');
 }
 
-function removeEditSaleItem(i){
-    // restore stock
+function removeEditSaleItem(i) {
     const item=editSaleItems[i];
     const p=products.find(x=>x.id===item.productId);
     if(p){const v=p.variants.find(x=>x.name===item.variantName);if(v)v.stock+=item.qty;}
@@ -1115,27 +1152,38 @@ function removeEditSaleItem(i){
     renderEditSaleItems(); updateEditSaleTotal();
 }
 
-function updateEditSaleTotal(){
+function updateEditSaleTotal() {
     const total=editSaleItems.reduce((a,i)=>a+i.price,0);
-    document.getElementById('editSaleTotal').textContent=fmt(total);
-    calcEditChange();
+    const el=document.getElementById('editSaleTotal');
+    if(el) el.textContent=fmt(total);
+    calcEditChange(); calcEditLoanBalance();
 }
 
-function calcEditChange(){
+function calcEditChange() {
     const total=editSaleItems.reduce((a,i)=>a+i.price,0);
-    const paid=parseFloat(document.getElementById('editAmountPaid').value)||0;
-    document.getElementById('editChangeAmount').value=fmt(paid-total);
+    const paid=parseFloat(document.getElementById('editAmountPaid')?.value)||0;
+    const el=document.getElementById('editChangeAmount');
+    if(el) el.value=fmt(paid-total);
 }
 
-function showEditItemPicker(){
+function calcEditLoanBalance() {
+    const total=editSaleItems.reduce((a,i)=>a+i.price,0);
+    const paidNow=parseFloat(document.getElementById('editLoanPaidNow')?.value)||0;
+    const el=document.getElementById('editLoanAmount');
+    if(el) el.value=fmt(Math.max(0,total-paidNow));
+}
+
+function showEditItemPicker() {
     const container=document.getElementById('editItemPicker');
+    if(!container) return;
     if(!products.length){container.innerHTML='<p style="font-size:13px;color:var(--gray);text-align:center;padding:12px;">No products.</p>';return;}
     editPickerProductId=null; editPickerVariant=null; editPickerQty=1;
     renderEditPicker();
 }
 
-function renderEditPicker(){
+function renderEditPicker() {
     const container=document.getElementById('editItemPicker');
+    if(!container) return;
     const step=editPickerProductId?(editPickerVariant?'qty':'variant'):'product';
     if(step==='product'){
         container.innerHTML=`<div class="item-picker"><div class="picker-label">Add Item</div><div class="picker-grid">${products.map(p=>`<div class="picker-chip" onclick="editPickProduct('${p.id}')">${p.brand}<span class="pc-sub">${p.category}</span></div>`).join('')}</div><div class="picker-actions"><button class="btn-picker-cancel" onclick="hideEditPicker()">Cancel</button><button class="btn-picker-add" disabled>Add</button></div></div>`;
@@ -1143,7 +1191,8 @@ function renderEditPicker(){
         const p=products.find(x=>x.id===editPickerProductId);
         container.innerHTML=`<div class="item-picker"><div class="picker-label">Select ${p.category==='Pods'?'Flavor':'Color'}</div><div class="picker-grid">${p.variants.map(v=>`<div class="picker-chip ${v.stock===0?'out-of-stock':''}" onclick="${v.stock>0?`editPickVariant('${v.name}')`:''}"> ${v.name}<span class="pc-sub">${v.stock===0?'Out of stock':v.stock+' left'}</span></div>`).join('')}</div><div class="picker-actions"><button class="btn-picker-cancel" onclick="editResetPicker()">Back</button><button class="btn-picker-add" disabled>Add</button></div></div>`;
     } else {
-        const p=products.find(x=>x.id===editPickerProductId); const v=p.variants.find(x=>x.name===editPickerVariant);
+        const p=products.find(x=>x.id===editPickerProductId);
+        const v=p.variants.find(x=>x.name===editPickerVariant);
         container.innerHTML=`<div class="item-picker"><div class="picker-label">Quantity</div><div class="qty-row"><span class="qty-label">Qty</span><input type="number" class="qty-input" value="${editPickerQty}" min="1" max="${v.stock}" oninput="editPickerQty=parseInt(this.value)||1"></div><div class="picker-actions"><button class="btn-picker-cancel" onclick="editResetPicker()">Back</button><button class="btn-picker-add ready" onclick="addEditPickedItem()">Add</button></div></div>`;
     }
 }
@@ -1151,25 +1200,33 @@ function renderEditPicker(){
 function editPickProduct(id){editPickerProductId=id;editPickerVariant=null;editPickerQty=1;renderEditPicker();}
 function editPickVariant(name){editPickerVariant=name;editPickerQty=1;renderEditPicker();}
 function editResetPicker(){editPickerProductId=null;editPickerVariant=null;renderEditPicker();}
-function hideEditPicker(){document.getElementById('editItemPicker').innerHTML=`<button class="btn-add-dashed" onclick="showEditItemPicker()" style="margin-bottom:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Item</button>`;}
+function hideEditPicker(){
+    const el=document.getElementById('editItemPicker');
+    if(el) el.innerHTML=`<button class="btn-add-dashed" onclick="showEditItemPicker()" style="margin-bottom:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Item</button>`;
+}
 
-function addEditPickedItem(){
-    const p=products.find(x=>x.id===editPickerProductId); const v=p.variants.find(x=>x.name===editPickerVariant);
-    const qty=editPickerQty||1; if(qty>v.stock){showToast(`Only ${v.stock} in stock`);return;}
-    // Temporarily deduct from stock preview
+function addEditPickedItem() {
+    const p=products.find(x=>x.id===editPickerProductId);
+    const v=p.variants.find(x=>x.name===editPickerVariant);
+    const qty=editPickerQty||1;
+    if(qty>v.stock){showToast(`Only ${v.stock} in stock`);return;}
     editSaleItems.push({productId:p.id,variantName:v.name,name:p.brand,qty,price:p.sellingPrice*qty,unitPrice:p.sellingPrice});
     renderEditSaleItems(); updateEditSaleTotal(); showEditItemPicker();
 }
 
 function toggleEditPayment() {
     const status=(document.querySelector('input[name="editStatus"]:checked')?.value||'').toLowerCase();
-    document.getElementById('editPaymentSection').style.display=status==='completed'?'block':'none';
-    document.getElementById('editLoanSection').style.display=status==='loan'?'block':'none';
+    const payEl=document.getElementById('editPaymentSection');
+    const loanEl=document.getElementById('editLoanSection');
+    if(payEl) payEl.style.display=status==='completed'?'block':'none';
+    if(loanEl) loanEl.style.display=status==='loan'?'block':'none';
 }
 
 function saveEditSale() {
     const id=document.getElementById('editSaleId').value;
     const s=sales.find(x=>x.id===id); if(!s) return;
+    if(!document.getElementById('editCustomerName').value.trim()){showToast('Enter customer name');return;}
+    if(!editSaleItems.length){showToast('Add at least one item');return;}
     // Restore stock for OLD items
     s.items.forEach(item=>{
         const p=products.find(x=>x.id===item.productId);
@@ -1183,16 +1240,27 @@ function saveEditSale() {
     s.items=editSaleItems.map(i=>({...i}));
     s.total=editSaleItems.reduce((a,i)=>a+i.price,0);
     s.customer=document.getElementById('editCustomerName').value.trim();
-    const rawEditStatus=document.querySelector('input[name="editStatus"]:checked').value;
-    s.status=rawEditStatus.charAt(0).toUpperCase()+rawEditStatus.slice(1);
-    const editRawPT=s.status.toLowerCase()==='completed'?document.querySelector('input[name="editPaymentType"]:checked').value:'none';
-    s.paymentType=editRawPT==='none'?'none':editRawPT.charAt(0).toUpperCase()+editRawPT.slice(1);
-    s.amountPaid=s.status.toLowerCase()==='completed'?parseFloat(document.getElementById('editAmountPaid').value)||s.total:s.total;
-    s.change=s.amountPaid-s.total;
-    if(s.status.toLowerCase()==='loan') s.loanBalance=parseFloat(document.getElementById('editLoanAmount').value)||0;
+    const rawStatus=document.querySelector('input[name="editStatus"]:checked').value;
+    s.status=rawStatus.charAt(0).toUpperCase()+rawStatus.slice(1);
+    const statusLow=s.status.toLowerCase();
+    const rawPT=statusLow==='completed'?document.querySelector('input[name="editPaymentType"]:checked')?.value:'none';
+    s.paymentType=(rawPT&&rawPT!=='none')?rawPT.charAt(0).toUpperCase()+rawPT.slice(1):'none';
+    if(statusLow==='completed'){
+        s.amountPaid=parseFloat(document.getElementById('editAmountPaid').value)||s.total;
+        s.change=s.amountPaid-s.total;
+    } else {
+        s.amountPaid=s.total; s.change=0;
+    }
+    if(statusLow==='loan'){
+        s.loanPaidNow=parseFloat(document.getElementById('editLoanPaidNow').value)||0;
+        s.loanBalance=Math.max(0,s.total-s.loanPaidNow);
+    } else {
+        s.loanBalance=0;
+    }
     localStorage.setItem('sales',JSON.stringify(sales));
     localStorage.setItem('products',JSON.stringify(products));
-    closeModal('editSaleModal'); displaySales(); displayProducts(); updateDashboard(); showToast('Sale updated!');
+    closeModal('editSaleModal'); displaySales(); displayProducts(); updateDashboard();
+    showToast('Sale updated!');
 }
 
 function deleteSale(id){currentAction='deleteSale';currentItemId=id;document.getElementById('confirmMsg').textContent='Delete this sale?';document.getElementById('confirmOverlay').classList.add('active');}
@@ -1239,7 +1307,13 @@ function doTransfer() {
     showToast(`Transferred ${fmt(amount)} ${dir==='cash-to-gcash'?'Cash → GCash':'GCash → Cash'}`);
 }
 
-function closeModal(id){document.getElementById(id).classList.remove('active');}
+function closeModal(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('closing');
+    el.classList.remove('active');
+    setTimeout(() => el.classList.remove('closing'), 340);
+}
 function setText(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
 function fmt(n){return '₱'+(parseFloat(n)||0).toFixed(2);}
 
@@ -1256,7 +1330,13 @@ function confirmAction() {
     closeConfirm();
 }
 
-function closeConfirm(){document.getElementById('confirmOverlay').classList.remove('active');currentAction=currentItemId=null;}
+function closeConfirm() {
+    const el = document.getElementById('confirmOverlay');
+    el.classList.add('closing');
+    el.classList.remove('active');
+    setTimeout(() => el.classList.remove('closing'), 260);
+    currentAction = currentItemId = null;
+}
 
 init();
 </script>
