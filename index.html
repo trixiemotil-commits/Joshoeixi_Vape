@@ -219,7 +219,7 @@
             position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:min(100%,430px);
             background:rgba(244,236,224,0.97); display:flex; justify-content:space-around;
             padding:6px 16px calc(8px + var(--safe-bottom)); border-top:1px solid rgba(93,58,44,0.14);
-            backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); z-index:100;
+            -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); z-index:100;
         }
         /* Hide bottom-nav visually when any modal is active so maroon doesn't show */
         body:has(.modal.active) .bottom-nav { opacity:0; pointer-events:none; }
@@ -291,7 +291,7 @@
             min-height:24px; padding:10px 12px;
             border-radius:var(--radius-md); border:1px solid rgba(145,108,80,0.3);
             background:#ede5d4; color:var(--ink); font-size:13px; font-weight:500;
-            line-height:1; cursor:pointer; user-select:none; -webkit-user-select:none;
+            line-height:1; cursor:pointer; -webkit-user-select:none; user-select:none;
         }
         .toggle-opt input { display:none; }
         /* icon + text sit side-by-side, the whole group is centered in the button */
@@ -336,6 +336,11 @@
 
         /* Modal footer */
         .modal-footer { position:sticky; bottom:calc(-16px - var(--safe-bottom)); background:#f5efe8; border-top:1px solid rgba(93,58,44,0.14); display:flex; gap:10px; padding:14px 20px calc(16px + var(--safe-bottom)); margin:20px -20px calc(-16px - var(--safe-bottom)); }
+        .modal-footer {
+            bottom:0;
+            margin:20px -20px 0;
+            z-index:3;
+        }
         /* iOS keyboard — modal sheet snaps back when keyboard closes */
         .modal-sheet { transition:transform .32s cubic-bezier(.32,.72,0,1), margin-bottom .1s ease !important; }
         .btn-cancel-modal { flex:1; min-height:52px; background:#ede5d4; border:1px solid rgba(145,108,80,0.3); border-radius:var(--radius-md); font-size:15px; font-weight:600; font-family:'Poppins',sans-serif; color:var(--ink); cursor:pointer; }
@@ -953,6 +958,8 @@ function displayProducts() {
 function filterByCategory(cat,btn) { currentCategory=cat; document.querySelectorAll('#products-page .tab-btn').forEach(b=>b.classList.remove('active')); if(btn)btn.classList.add('active'); displayProducts(); }
 
 function openAddProductModal() {
+    const productSheet = document.querySelector('#productModal .modal-sheet');
+    if (productSheet) productSheet.style.marginBottom = '';
     document.getElementById('productForm').reset();
     document.getElementById('productId').value=''; document.getElementById('productModalTitle').textContent='Add Product';
     document.getElementById('variantsContainer').innerHTML=''; document.getElementById('profit').value='';
@@ -1014,6 +1021,8 @@ function saveProduct(e) {
 
 function editProduct(id) {
     const p=products.find(x=>x.id===id); if(!p) return;
+    const productSheet = document.querySelector('#productModal .modal-sheet');
+    if (productSheet) productSheet.style.marginBottom = '';
     document.getElementById('productModalTitle').textContent='Edit Product';
     document.getElementById('productId').value=p.id;
     document.querySelector(`input[name="category"][value="${p.category}"]`).checked=true;
@@ -1426,6 +1435,8 @@ function doTransfer() {
 function closeModal(id) {
     const el = document.getElementById(id);
     if (!el) return;
+    const sheet = el.querySelector('.modal-sheet');
+    if (sheet) sheet.style.marginBottom = '';
     el.classList.add('closing');
     el.classList.remove('active');
     setTimeout(() => el.classList.remove('closing'), 340);
@@ -1472,10 +1483,12 @@ if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', () => {
         const vh = window.visualViewport.height;
         const diff = window.innerHeight - vh; // how much keyboard takes
-        // Push all open modal sheets up by the keyboard height
-        document.querySelectorAll('.modal.active .modal-sheet').forEach(sheet => {
+        // Push open modal sheets up by keyboard height, but skip Add Product modal.
+        document.querySelectorAll('.modal.active:not(#productModal) .modal-sheet').forEach(sheet => {
             sheet.style.marginBottom = diff > 50 ? diff + 'px' : '';
         });
+        const productSheet = document.querySelector('#productModal.active .modal-sheet');
+        if (productSheet) productSheet.style.marginBottom = '';
         // When keyboard gone, ensure bottom-nav is back
         if (diff < 50) {
             document.querySelectorAll('.modal.active .modal-sheet').forEach(s => s.style.marginBottom = '');
