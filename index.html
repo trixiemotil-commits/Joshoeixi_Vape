@@ -1513,7 +1513,7 @@ if (window.visualViewport) {
         const vh = window.visualViewport.height;
         const offsetY = window.visualViewport.offsetTop || 0;
         const diff = window.innerHeight - vh - offsetY;
-        const keyboardUp = diff > 80;
+        const keyboardUp = diff > 10;
 
         document.querySelectorAll('.modal.active').forEach(modal => {
             const sheet = modal.querySelector('.modal-sheet');
