@@ -249,8 +249,6 @@
         }
         .modal.active { background:rgba(0,0,0,0.45); pointer-events:all; }
         .modal.closing { background:rgba(0,0,0,0); pointer-events:none; }
-        /* Product modal: fill viewport completely, no gaps */
-        #productModal.active { background:var(--cream); }
         .modal-sheet {
             background:#f5efe8; width:min(100%,430px); max-height:calc(100dvh - 60px - var(--safe-top));
             overflow-y:auto; border-radius:28px 28px 0 0; padding:0 20px 0;
@@ -259,13 +257,6 @@
         }
         .modal.active .modal-sheet { transform:translateY(0); }
         .modal.closing .modal-sheet { transform:translateY(100%); }
-        /* Product modal sheet: remove height cap, fill viewport */
-        #productModal .modal-sheet {
-            max-height: none !important;
-            height: calc(100dvh - var(--safe-top)) !important;
-            margin-bottom: 0 !important;
-            padding-bottom: 0 !important;
-        }
         @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
         .modal-handle { width:36px; height:4px; background:rgba(93,58,44,0.25); border-radius:2px; margin:12px auto 0; }
         .modal-hdr {
@@ -1538,19 +1529,10 @@ if (window.visualViewport) {
         const keyboardUp = diff > 80;
 
         document.querySelectorAll('.modal.active').forEach(modal => {
-            // Product modal: completely bypass keyboard logic, force-clear any styles
-            if (modal.id === 'productModal') {
-                const sheet = modal.querySelector('.modal-sheet');
-                if (sheet) {
-                    sheet.style.cssText = '';  // Clear all inline styles
-                }
-                return;
-            }
-            
             const sheet = modal.querySelector('.modal-sheet');
             if (!sheet) return;
             
-            // Other modals: push up when keyboard shows
+            // All modals: push up when keyboard shows
             if (keyboardUp) {
                 sheet.style.marginBottom = diff + 'px';
             } else {
