@@ -1530,7 +1530,17 @@ if (window.visualViewport) {
         const diff = Math.max(0, window.innerHeight - vh - off);
         const keyboardUp = diff > 80;
 
-        document.querySelectorAll('.modal.active .modal-sheet').forEach(sheet => {
+        document.querySelectorAll('.modal.active').forEach(modal => {
+            const sheet = modal.querySelector('.modal-sheet');
+            if (!sheet) return;
+            
+            // Product modal stays pinned — no keyboard offset
+            if (modal.id === 'productModal') {
+                sheet.style.marginBottom = '';
+                return;
+            }
+            
+            // Other modals: push up when keyboard shows
             if (keyboardUp) {
                 sheet.style.marginBottom = diff + 'px';
             } else {
