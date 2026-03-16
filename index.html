@@ -85,7 +85,7 @@
             --safe-top:env(safe-area-inset-top,0px); --safe-bottom:env(safe-area-inset-bottom,0px);
         }
         body {
-            background:var(--dark-maroon);
+            background:var(--cream);
             min-height:100dvh; display:flex; flex-direction:column;
         }
         /* Cream background starts after the top band + safe area */
@@ -965,7 +965,11 @@ function filterByCategory(cat,btn) { currentCategory=cat; document.querySelector
 
 function openAddProductModal() {
     const productSheet = document.querySelector('#productModal .modal-sheet');
-    if (productSheet) productSheet.style.marginBottom = '';
+    if (productSheet) {
+        productSheet.style.marginBottom = '';
+        productSheet.style.transform = '';
+        productSheet.style.transition = '';
+    }
     document.getElementById('productForm').reset();
     document.getElementById('productId').value=''; document.getElementById('productModalTitle').textContent='Add Product';
     document.getElementById('variantsContainer').innerHTML=''; document.getElementById('profit').value='';
@@ -1028,7 +1032,11 @@ function saveProduct(e) {
 function editProduct(id) {
     const p=products.find(x=>x.id===id); if(!p) return;
     const productSheet = document.querySelector('#productModal .modal-sheet');
-    if (productSheet) productSheet.style.marginBottom = '';
+    if (productSheet) {
+        productSheet.style.marginBottom = '';
+        productSheet.style.transform = '';
+        productSheet.style.transition = '';
+    }
     document.getElementById('productModalTitle').textContent='Edit Product';
     document.getElementById('productId').value=p.id;
     document.querySelector(`input[name="category"][value="${p.category}"]`).checked=true;
@@ -1442,7 +1450,11 @@ function closeModal(id) {
     const el = document.getElementById(id);
     if (!el) return;
     const sheet = el.querySelector('.modal-sheet');
-    if (sheet) sheet.style.marginBottom = '';
+    if (sheet) {
+        sheet.style.marginBottom = '';
+        sheet.style.transform = '';
+        sheet.style.transition = '';
+    }
     el.classList.add('closing');
     el.classList.remove('active');
     setTimeout(() => el.classList.remove('closing'), 340);
@@ -1482,9 +1494,8 @@ function closeConfirm() {
 init();
 
 // ── iOS visual viewport keyboard fix ─────────────────────────────
-// When the keyboard shows/hides, snap the modal sheet bottom padding
-// so the maroon never bleeds through below the sheet.
-// ── iOS visual viewport keyboard fix ─────────────────────────────
+// Keep active modals steady when keyboard opens/closes and avoid
+// stale inline offsets that can make the footer appear stuck.
 if (window.visualViewport) {
     function _handleVPResize() {
         const vh = window.visualViewport.height;
@@ -1492,21 +1503,20 @@ if (window.visualViewport) {
         const diff = window.innerHeight - vh - offsetY;
         const keyboardUp = diff > 80;
 
-        document.querySelectorAll('.modal.active .modal-sheet').forEach(sheet => {
-            if (keyboardUp) {
-                // Slide sheet up so footer stays above keyboard
-                sheet.style.transform = `translateY(-${diff}px)`;
-                sheet.style.transition = 'transform .15s ease';
-            } else {
-                // Keyboard gone — snap back, then restore normal transition
-                sheet.style.transform = 'translateY(0)';
-                sheet.style.transition = 'transform .22s ease';
-                // After snap, let CSS handle it again
-                setTimeout(() => {
-                    sheet.style.transform = '';
-                    sheet.style.transition = '';
-                }, 240);
+        document.querySelectorAll('.modal.active').forEach(modal => {
+            const sheet = modal.querySelector('.modal-sheet');
+            if (!sheet) return;
+
+            // Add Product modal is kept pinned to avoid footer drift on iOS.
+            if (modal.id === 'productModal') {
+                sheet.style.marginBottom = '';
+                sheet.style.transform = '';
+                sheet.style.transition = '';
+                return;
             }
+
+            if (keyboardUp) sheet.style.marginBottom = `${diff}px`;
+            else sheet.style.marginBottom = '';
         });
     }
 
