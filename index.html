@@ -335,11 +335,16 @@
         .btn-add-dashed { width:100%; min-height:46px; background:transparent; border:2px dashed rgba(107,26,41,0.4); border-radius:var(--radius-md); color:var(--maroon); font-size:14px; font-weight:500; font-family:'Poppins',sans-serif; cursor:pointer; margin-top:6px; display:flex; align-items:center; justify-content:center; gap:6px; }
 
         /* Modal footer */
-        .modal-footer { position:sticky; bottom:calc(-16px - var(--safe-bottom)); background:#f5efe8; border-top:1px solid rgba(93,58,44,0.14); display:flex; gap:10px; padding:14px 20px calc(16px + var(--safe-bottom)); margin:20px -20px calc(-16px - var(--safe-bottom)); }
         .modal-footer {
-            bottom:0;
-            margin:20px -20px 0;
-            z-index:3;
+            position: sticky;
+            bottom: 0;
+            background: #f5efe8;
+            border-top: 1px solid rgba(93,58,44,0.14);
+            display: flex;
+            gap: 10px;
+            padding: 14px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+            margin: 20px -20px 0;
+            z-index: 3;
         }
         /* iOS keyboard — modal sheet snaps back when keyboard closes */
         .modal-sheet { transition:transform .32s cubic-bezier(.32,.72,0,1), margin-bottom .1s ease !important; }
