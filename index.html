@@ -1529,15 +1529,11 @@ if (window.visualViewport) {
         const keyboardUp = diff > 80;
 
         document.querySelectorAll('.modal.active').forEach(modal => {
+            // Product modal: never apply keyboard offset — no cream gap
+            if (modal.id === 'productModal') return;
+            
             const sheet = modal.querySelector('.modal-sheet');
             if (!sheet) return;
-            
-            // Product modal stays pinned — no keyboard offset
-            if (modal.id === 'productModal') {
-                sheet.style.marginBottom = '';
-                sheet.style.paddingBottom = '';
-                return;
-            }
             
             // Other modals: push up when keyboard shows
             if (keyboardUp) {
