@@ -257,6 +257,12 @@
         }
         .modal.active .modal-sheet { transform:translateY(0); }
         .modal.closing .modal-sheet { transform:translateY(100%); }
+        /* Product modal: lock height, no gaps, no margins */
+        #productModal .modal-sheet {
+            min-height: calc(100dvh - 60px - var(--safe-top)) !important;
+            margin-bottom: 0 !important;
+            padding-bottom: 0 !important;
+        }
         @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
         .modal-handle { width:36px; height:4px; background:rgba(93,58,44,0.25); border-radius:2px; margin:12px auto 0; }
         .modal-hdr {
@@ -1529,8 +1535,14 @@ if (window.visualViewport) {
         const keyboardUp = diff > 80;
 
         document.querySelectorAll('.modal.active').forEach(modal => {
-            // Product modal: never apply keyboard offset — no cream gap
-            if (modal.id === 'productModal') return;
+            // Product modal: completely bypass keyboard logic, force-clear any styles
+            if (modal.id === 'productModal') {
+                const sheet = modal.querySelector('.modal-sheet');
+                if (sheet) {
+                    sheet.style.cssText = '';  // Clear all inline styles
+                }
+                return;
+            }
             
             const sheet = modal.querySelector('.modal-sheet');
             if (!sheet) return;
