@@ -1519,10 +1519,8 @@ function closeConfirm() {
 init();
 
 // ── iOS visual viewport keyboard fix ─────────────────────────────
-// When keyboard shows, push modal sheet up by keyboard height so the
-// sticky footer stays above the keyboard.  When keyboard hides,
-// clear instantly (no CSS transition on margin-bottom) so the footer
-// never appears stuck between the modal and the bottom nav.
+// When keyboard shows, push modal sheet up so footer stays above keyboard.
+// When keyboard hides, force-clear all offsets instantly so no excess cream shows.
 if (window.visualViewport) {
     function _handleVPResize() {
         const vh  = window.visualViewport.height;
@@ -1537,6 +1535,7 @@ if (window.visualViewport) {
             // Product modal stays pinned — no keyboard offset
             if (modal.id === 'productModal') {
                 sheet.style.marginBottom = '';
+                sheet.style.paddingBottom = '';
                 return;
             }
             
@@ -1544,10 +1543,18 @@ if (window.visualViewport) {
             if (keyboardUp) {
                 sheet.style.marginBottom = diff + 'px';
             } else {
-                // Force instant removal — suppress any lingering transition
+                // Force instant removal — suppress transition and clear all offsets
                 sheet.style.transition = 'transform .32s cubic-bezier(.32,.72,0,1)';
-                sheet.style.marginBottom = '';
-                requestAnimationFrame(() => { sheet.style.transition = ''; });
+                sheet.style.marginBottom = '0px';
+                sheet.style.paddingBottom = '0px';
+                // Force layout recalc to remove excess cream
+                void sheet.offsetHeight;
+                // Then clear inline styles
+                requestAnimationFrame(() => {
+                    sheet.style.transition = '';
+                    sheet.style.marginBottom = '';
+                    sheet.style.paddingBottom = '';
+                });
             }
         });
     }
