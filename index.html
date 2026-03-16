@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Joshoeixi Vape</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif; }
+        :root {
+            --maroon:#6b1a29; --cream:#e1d2be; --light-cream:#f5efe8; --dark-maroon:#3d0a0f;
+            --ink:#221615; --gray:#6a5a4f; --border:rgba(93,58,44,0.15);
+            --surface:#f7f2ec; --surface-soft:#ede4d8;
+            --radius-sm:10px; --radius-md:14px; --radius-lg:18px;
+            --success:#059669; --warning:#d97706; --danger:#dc2626;
+            --top-band-height:90px;
+            --safe-top:env(safe-area-inset-top,0px); --safe-bottom:env(safe-area-inset-bottom,0px);
+        }
+        body {
+            background:var(--dark-maroon);
+            min-height:100dvh; display:flex; flex-direction:column;
+        }
+        /* Cream background starts after the top band + safe area */
+        .main-content-wrapper {
+            flex:1; display:flex; flex-direction:column; min-height:100dvh;
+            background:linear-gradient(to bottom,var(--dark-maroon) 0px,var(--dark-maroon) calc(var(--top-band-height) + env(safe-area-inset-top,0px)),var(--cream) calc(var(--top-band-height) + env(safe-area-inset-top,0px)));
+        }
+        .main-content {
+            flex:1; overflow-y:auto; width:100%; max-width:430px; margin:0 auto;
+            padding:calc(var(--top-band-height) + env(safe-area-inset-top,0px) + 10px) 16px calc(90px + env(safe-area-inset-bottom,0px));
+        }
+        .page { display:none; } .page.active { display:block; }
+
+        /* DASHBOARD */
+        .dash-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+        .dash-header h1 { font-size:26px; font-weight:700; color:var(--ink); letter-spacing:-0.01em; }
+        .dash-header .subtitle { font-size:12px; color:var(--gray); font-weight:400; margin-top:2px; }
+        .dash-header .header-icon {
+            width:50px; height:50px; background:var(--surface); border:1px solid var(--border);
+            border-radius:14px; display:flex; align-items:center; justify-content:center;
+            color:var(--maroon); box-shadow:0 4px 14px rgba(60,10,20,0.08); flex-shrink:0;
+        }
+        .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+        .stat-card {
+            background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg);
+            padding:16px; box-shadow:0 4px 16px rgba(60,10,20,0.07);
+        }
+        .stat-card .sc-icon { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; }
+        .stat-card .sc-label { font-size:12px; color:var(--gray); font-weight:500; margin-bottom:4px; }
+        .stat-card .sc-value { font-size:20px; font-weight:700; color:var(--ink); letter-spacing:-0.01em; }
+        .stat-card.accent-blue  { border-left:3px solid #7c5de6; }
+        .stat-card.accent-green { border-left:3px solid var(--success); }
+        .stat-card.accent-amber { border-left:3px solid #f59e0b; }
+        .stat-card.accent-rose  { border-left:3px solid #e11d48; }
+        .sc-icon.bg-blue  { background:#ede9fd; color:#7c5de6; }
+        .sc-icon.bg-green { background:#d1fae5; color:var(--success); }
+        .sc-icon.bg-amber { background:#fef3c7; color:#d97706; }
+        .sc-icon.bg-rose  { background:#ffe4e6; color:#e11d48; }
+        .section-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:18px; margin-bottom:14px; box-shadow:0 4px 16px rgba(60,10,20,0.07); }
+        .section-title { font-size:16px; font-weight:700; color:var(--ink); margin-bottom:14px; }
+        .category-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+        .cat-tile { border-radius:var(--radius-md); padding:18px 14px; display:flex; flex-direction:column; align-items:center; gap:8px; }
+        .cat-tile.pods-tile { background:#dfd1cd; } .cat-tile.battery-tile { background:#ecddc8; }
+        .cat-tile .ct-icon { width:40px; height:40px; display:flex; align-items:center; justify-content:center; }
+        .cat-tile .ct-count { font-size:32px; font-weight:700; line-height:1; }
+        .pods-tile .ct-count { color:#7c5de6; } .battery-tile .ct-count { color:#d97706; }
+        .cat-tile .ct-label { font-size:13px; color:var(--gray); font-weight:500; }
+        .txn-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+        .txn-tile { background:var(--surface-soft); border-radius:var(--radius-sm); padding:12px 6px; text-align:center; }
+        .txn-tile .tt-count { font-size:20px; font-weight:700; color:var(--ink); }
+        .txn-tile .tt-label { font-size:11px; color:var(--gray); font-weight:500; margin-top:2px; }
+        .txn-tile.t-completed .tt-count { color:#059669; }
+        .txn-tile.t-reserved  .tt-count { color:#d97706; }
+        .txn-tile.t-loan      .tt-count { color:#dc2626; }
+        .payment-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+        .pay-tile { background:var(--surface-soft); border-radius:var(--radius-md); padding:14px; }
+        .pay-tile .pt-label { display:flex; align-items:center; gap:6px; font-size:13px; color:var(--gray); font-weight:500; margin-bottom:6px; }
+        .pay-tile .pt-amount { font-size:22px; font-weight:700; color:var(--ink); }
+        .transfer-btn {
+            display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:12px;
+            padding:12px; border-radius:var(--radius-md); background:var(--maroon); color:#fff;
+            border:none; font-size:14px; font-weight:600; font-family:'Poppins',sans-serif; cursor:pointer;
+            box-shadow:0 4px 14px rgba(60,10,20,0.18);
+        }
+
+        /* PRODUCTS */
+        .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+        .page-header h1 { font-size:28px; font-weight:700; color:var(--ink); letter-spacing:-0.01em; }
+        .btn-primary {
+            background:var(--maroon); color:#fff; border:none; padding:0 16px; height:44px;
+            border-radius:var(--radius-md); font-size:14px; font-weight:600; font-family:'Poppins',sans-serif;
+            display:inline-flex; align-items:center; gap:6px; cursor:pointer;
+            box-shadow:0 4px 14px rgba(60,10,20,0.22); white-space:nowrap;
+        }
+        .search-bar {
+            background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg);
+            padding:0 16px; height:52px; margin-bottom:14px; display:flex; align-items:center; gap:10px;
+        }
+        .search-bar input { border:none; outline:none; width:100%; font-size:16px; font-family:'Poppins',sans-serif; background:transparent; color:var(--ink); }
+        .search-bar input::placeholder { color:#9d8a7a; }
+        .cat-tabs { display:flex; gap:8px; margin-bottom:16px; overflow-x:auto; padding-bottom:2px; }
+        .cat-tabs::-webkit-scrollbar { display:none; }
+        .tab-btn {
+            display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:0 16px; height:40px;
+            border-radius:20px; background:var(--surface); border:1px solid var(--border);
+            font-size:13px; font-weight:500; font-family:'Poppins',sans-serif; cursor:pointer; white-space:nowrap; color:var(--ink);
+        }
+        .tab-btn.active { background:var(--maroon); color:#fff; border-color:var(--maroon); }
+        .tab-btn svg { width:14px; height:14px; flex-shrink:0; }
+        .product-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px; margin-bottom:12px; box-shadow:0 4px 14px rgba(60,10,20,0.07); }
+        .pc-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
+        .pc-name { font-size:17px; font-weight:700; color:var(--ink); }
+        .pc-badge { background:#eadfda; color:var(--maroon); font-size:12px; font-weight:600; padding:3px 10px; border-radius:8px; }
+        .pc-actions { display:flex; gap:6px; }
+        .btn-icon-sm { width:36px; height:36px; border-radius:10px; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+        .btn-edit-sm { background:#efe2d3; color:var(--maroon); } .btn-del-sm { background:#f4e0df; color:#9d1525; }
+        .pc-price-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+        .pc-price-box { background:var(--surface-soft); border-radius:var(--radius-sm); padding:10px 12px; }
+        .pc-price-box .pbl { font-size:11px; color:var(--gray); font-weight:500; margin-bottom:2px; }
+        .pc-price-box .pbv { font-size:16px; font-weight:700; color:var(--ink); }
+        .pc-price-box .pbv.green { color:#059669; }
+        .pc-divider { border:none; border-top:1px solid rgba(93,58,44,0.12); margin:12px 0; }
+        .pc-variants-title { font-size:13px; color:var(--gray); font-weight:500; margin-bottom:8px; }
+        .pc-variants { display:flex; flex-wrap:wrap; gap:6px; }
+        .variant-chip { background:var(--surface-soft); border-radius:8px; padding:5px 12px; font-size:13px; display:flex; align-items:center; gap:6px; }
+        .variant-chip .vc-stock { font-weight:700; color:var(--maroon); }
+        .variant-chip .vc-stock.low { color:var(--danger); }
+        .low-stock-banner { margin-top:10px; background:#fbecec; border-radius:var(--radius-sm); padding:10px 14px; display:flex; align-items:center; gap:6px; color:var(--danger); font-size:13px; font-weight:600; }
+        .empty-state { text-align:center; padding:60px 20px 40px; color:var(--gray); }
+        .empty-state svg { margin-bottom:16px; opacity:.35; }
+        .empty-state .es-title { font-size:20px; font-weight:700; color:var(--ink); margin-bottom:6px; }
+        .empty-state .es-sub { font-size:14px; color:var(--gray); }
+
+        /* SALES */
+        .sales-txn-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; }
+        .sales-txn-tile { border-radius:var(--radius-md); padding:14px 10px; text-align:center; }
+        .sales-txn-tile.s-completed { background:#d3ede0; } .sales-txn-tile.s-reserved { background:#fdf3dc; } .sales-txn-tile.s-loan { background:#f8e0df; }
+        .sales-txn-tile .stt-count { font-size:22px; font-weight:700; }
+        .s-completed .stt-count { color:#059669; } .s-reserved .stt-count { color:#d97706; } .s-loan .stt-count { color:#dc2626; }
+        .sales-txn-tile .stt-label { font-size:12px; font-weight:500; color:var(--gray); margin-top:2px; }
+        .sale-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px; margin-bottom:12px; box-shadow:0 4px 14px rgba(60,10,20,0.07); }
+        .sale-card-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+        .sale-customer { font-size:16px; font-weight:700; color:var(--ink); }
+        .sale-status-badge { font-size:12px; font-weight:600; padding:3px 10px; border-radius:8px; color:#fff; }
+        .status-completed { background:#059669; } .status-reserved { background:#d97706; } .status-loan { background:#dc2626; }
+        .sale-meta { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:10px; font-size:13px; }
+        .sale-meta .sm-item span { color:var(--gray); } .sale-meta .sm-item strong { color:var(--ink); margin-left:4px; }
+
+        /* BOTTOM NAV */
+        .bottom-nav {
+            position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:min(100%,430px);
+            background:rgba(244,236,224,0.97); display:flex; justify-content:space-around;
+            padding:6px 16px calc(8px + var(--safe-bottom)); border-top:1px solid rgba(93,58,44,0.14);
+            -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); z-index:100;
+        }
+        .nav-item {
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            gap:2px; color:var(--gray); font-size:11px; font-weight:500; cursor:pointer;
+            padding:4px 12px 6px; border-radius:12px; min-width:70px;
+        }
+        .nav-item.active { color:var(--maroon); }
+        .nav-item svg { width:22px; height:22px; display:block; stroke:var(--gray); flex-shrink:0; }
+        .nav-item.active svg { stroke:#e1d2be; }
+        .nav-item span { display:block; text-align:center; line-height:1; }
+        /* Rounded pill behind icon when active */
+        .nav-item .nav-icon-wrap {
+            width:52px; height:32px; display:flex; align-items:center; justify-content:center;
+            border-radius:16px; margin-bottom:2px; transition:background .2s ease;
+        }
+        .nav-item.active .nav-icon-wrap {
+            background:var(--maroon); box-shadow:0 2px 8px rgba(60,10,20,0.25);
+        }
+
+        /* MODALS */
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:500; align-items:flex-end; justify-content:center; pointer-events:none; }
+        .modal.active { pointer-events:all; }
+        .modal.active { display:flex; }
+        .modal-sheet {
+            background:#f5efe8; width:min(100%,430px); max-height:calc(100dvh - 60px - var(--safe-top));
+            overflow-y:auto; border-radius:28px 28px 0 0; padding:0 20px calc(16px + var(--safe-bottom));
+            animation:slideUp .28s cubic-bezier(.32,.72,0,1); pointer-events:all;
+        }
+        @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+        .modal-handle { width:36px; height:4px; background:rgba(93,58,44,0.25); border-radius:2px; margin:12px auto 0; }
+        .modal-hdr {
+            position:sticky; top:0; background:#f5efe8; display:flex; justify-content:space-between; align-items:center;
+            padding:16px 0 14px; border-bottom:1px solid rgba(93,58,44,0.14); margin-bottom:20px; z-index:2;
+        }
+        .modal-hdr h2 { font-size:20px; font-weight:700; color:var(--ink); }
+        .modal-close { width:32px; height:32px; border-radius:50%; background:var(--surface-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; border:none; color:var(--gray); }
+
+        /* FORMS */
+        .form-group { margin-bottom:16px; }
+        .form-group label { display:block; font-size:13px; font-weight:600; color:#4f4036; margin-bottom:8px; }
+        .form-input {
+            width:100%; height:50px; padding:0 16px; border:1px solid rgba(145,108,80,0.35); border-radius:var(--radius-md);
+            font-size:16px; font-family:'Poppins',sans-serif; background:#ede5d4; color:var(--ink); outline:none;
+        }
+        .form-input:focus { border-color:rgba(107,26,41,0.6); box-shadow:0 0 0 3px rgba(107,26,41,0.12); }
+        .form-input::placeholder { color:#9d8a7a; }
+        .form-input.readonly-field { background:var(--surface-soft); color:var(--gray); cursor:default; }
+        .form-input.profit-field { background:#d7f0e7; color:#059669; font-weight:700; border-color:rgba(5,150,105,0.25); }
+        input[type="number"] { -moz-appearance:textfield; appearance:textfield; }
+        input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance:none; }
+        .price-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
+        .price-row .form-group { margin-bottom:0; }
+
+        /* TOGGLE OPTIONS */
+        .toggle-group { display:grid; gap:10px; margin-top:4px; }
+        .toggle-group.two-col   { grid-template-columns:1fr 1fr; }
+        .toggle-group.three-col { grid-template-columns:1fr 1fr 1fr; }
+        .toggle-opt {
+            display:flex; flex-direction:row; align-items:center; justify-content:center;
+            min-height:54px; padding:10px 0px 10px 0px; gap:8px; 
+            border-radius:var(--radius-md); border:1px solid rgba(145,08,80,0.3);
+            background:#ede5d4; color:var(--ink); font-size:13px; font-weight:500;
+            line-height:1; cursor:pointer; -webkit-user-select:none; user-select:none;
+        }
+        .toggle-opt input { display:none; }
+        /* The inner wrapper centers icon+text together as one unit */
+        .toggle-inner {
+            display:inline-flex; flex-direction:row; align-items:center;
+            justify-content:center; gap:8px; pointer-events:none; width:100%;
+        }
+        .toggle-inner svg {
+            width:26px; height:26px; flex-shrink:0; display:block;
+        }
+        .toggle-inner span {
+            font-size:13px; font-weight:500; white-space:nowrap; line-height:1; display:inline-block;
+        }
+        /* Category & payment */
+        .toggle-opt:has(input[name="category"]:checked),
+        .toggle-opt:has(input[name="paymentType"]:checked),
+        .toggle-opt:has(input[name="editPaymentType"]:checked),
+        .toggle-opt:has(input[name="transferDir"]:checked) {
+            background:var(--maroon); border-color:var(--maroon); color:#fff;
+        }
+        /* Status — green/amber/red */
+        .toggle-opt:has(input[name="status"][value="completed"]:checked),
+        .toggle-opt:has(input[name="editStatus"][value="completed"]:checked) { background:#059669; border-color:#059669; color:#fff; }
+        .toggle-opt:has(input[name="status"][value="reserved"]:checked),
+        .toggle-opt:has(input[name="editStatus"][value="reserved"]:checked) { background:#d97706; border-color:#d97706; color:#fff; }
+        .toggle-opt:has(input[name="status"][value="loan"]:checked),
+        .toggle-opt:has(input[name="editStatus"][value="loan"]:checked) { background:#dc2626; border-color:#dc2626; color:#fff; }
+
+        /* Loan section */
+        .loan-section { background:#fef2f2; border:1px solid rgba(220,38,38,0.2); border-radius:var(--radius-md); padding:14px; margin-bottom:16px; }
+        .loan-section .loan-label { font-size:13px; font-weight:600; color:#dc2626; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+        .loan-section .form-input { background:#fff4f4; border-color:rgba(220,38,38,0.3); }
+        .loan-section .form-input:focus { border-color:#dc2626; box-shadow:0 0 0 3px rgba(220,38,38,0.12); }
+
+        /* Variant inputs */
+        .variant-input-wrap { background:#e8dac7; border-radius:var(--radius-md); padding:12px; margin-bottom:8px; }
+        .variant-row { display:flex; gap:8px; align-items:center; }
+        .variant-row .form-input { flex:1; height:46px; font-size:14px; }
+        .variant-row .form-input.stock-input { max-width:80px; text-align:center; }
+        .btn-remove-var { width:36px; height:36px; border-radius:8px; border:none; background:#f4e0df; color:#9d1525; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; font-size:16px; }
+        .btn-add-dashed { width:100%; min-height:46px; background:transparent; border:2px dashed rgba(107,26,41,0.4); border-radius:var(--radius-md); color:var(--maroon); font-size:14px; font-weight:500; font-family:'Poppins',sans-serif; cursor:pointer; margin-top:6px; display:flex; align-items:center; justify-content:center; gap:6px; }
+
+        /* Modal footer */
+        .modal-footer { position:sticky; bottom:calc(-16px - var(--safe-bottom)); background:#f5efe8; border-top:1px solid rgba(93,58,44,0.14); display:flex; gap:10px; padding:14px 20px calc(16px + var(--safe-bottom)); margin:20px -20px calc(-16px - var(--safe-bottom)); }
+        .btn-cancel-modal { flex:1; min-height:52px; background:#ede5d4; border:1px solid rgba(145,108,80,0.3); border-radius:var(--radius-md); font-size:15px; font-weight:600; font-family:'Poppins',sans-serif; color:var(--ink); cursor:pointer; }
+        .btn-save-modal { flex:1; min-height:52px; background:var(--maroon); color:#fff; border:none; border-radius:var(--radius-md); font-size:15px; font-weight:600; font-family:'Poppins',sans-serif; cursor:pointer; }
+
+        /* Sale items */
+        .sale-items-list { margin-bottom:4px; }
+        .sale-item-chip { display:flex; align-items:center; justify-content:space-between; background:var(--surface-soft); border-radius:var(--radius-md); padding:12px 14px; margin-bottom:8px; }
+        .sic-left { flex:1; } .sic-name { font-size:15px; font-weight:600; color:var(--ink); } .sic-meta { font-size:12px; color:var(--gray); margin-top:2px; }
+        .sic-price { font-size:16px; font-weight:700; color:var(--maroon); margin-right:12px; }
+        .sic-remove { width:28px; height:28px; border-radius:50%; background:#f4e0df; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#9d1525; font-size:16px; }
+
+        /* Item picker */
+        .item-picker { background:var(--surface-soft); border-radius:var(--radius-md); padding:14px; margin-bottom:8px; }
+        .picker-label { font-size:13px; font-weight:600; color:var(--gray); margin-bottom:10px; }
+        .picker-grid { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+        .picker-chip { padding:8px 14px; border-radius:10px; border:1px solid rgba(93,58,44,0.18); background:var(--surface); font-size:14px; font-weight:500; cursor:pointer; color:var(--ink); }
+        .picker-chip.selected { background:var(--maroon); color:#fff; border-color:var(--maroon); }
+        .picker-chip .pc-sub { font-size:11px; opacity:.75; display:block; margin-top:1px; }
+        .picker-chip.selected .pc-sub { opacity:.8; }
+        .picker-chip.out-of-stock { opacity:.4; cursor:not-allowed; }
+        .qty-row { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+        .qty-label { font-size:13px; font-weight:600; color:var(--gray); }
+        .qty-input { width:80px; height:44px; text-align:center; border:1px solid rgba(145,108,80,0.35); border-radius:var(--radius-sm); background:var(--surface); font-size:16px; font-weight:600; font-family:'Poppins',sans-serif; color:var(--ink); outline:none; }
+        .picker-actions { display:flex; gap:8px; }
+        .btn-picker-cancel { flex:1; height:44px; border:1px solid rgba(145,108,80,0.3); background:var(--surface); border-radius:var(--radius-sm); font-family:'Poppins',sans-serif; font-size:14px; font-weight:500; cursor:pointer; }
+        .btn-picker-add { flex:1; height:44px; background:#8c6a5a; color:#fff; border:none; border-radius:var(--radius-sm); font-family:'Poppins',sans-serif; font-size:14px; font-weight:600; cursor:pointer; }
+        .btn-picker-add.ready { background:var(--maroon); }
+        .total-row { background:var(--surface-soft); border-radius:var(--radius-md); padding:14px 16px; display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+        .total-row .tr-label { font-size:15px; font-weight:600; color:var(--gray); }
+        .total-row .tr-value { font-size:22px; font-weight:700; color:var(--maroon); }
+
+        /* Sale summary */
+        .summary-block { background:var(--surface-soft); border-radius:var(--radius-md); padding:14px; margin-bottom:14px; }
+        .summary-block p { font-size:14px; color:var(--ink); margin-bottom:4px; }
+        .si-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(93,58,44,0.1); font-size:14px; }
+        .si-row:last-child { border-bottom:none; }
+        .si-row .si-name { color:var(--ink); } .si-row .si-price { font-weight:700; color:var(--maroon); }
+        .summary-total-box { background:var(--maroon); color:#fff; border-radius:var(--radius-md); padding:16px; }
+        .stb-row { display:flex; justify-content:space-between; align-items:center; font-size:14px; margin-bottom:8px; }
+        .stb-row:last-child { margin-bottom:0; font-weight:700; font-size:16px; }
+
+        /* Transfer modal */
+        .transfer-direction { display:flex; align-items:center; justify-content:center; gap:12px; background:var(--surface-soft); border-radius:var(--radius-md); padding:16px; margin-bottom:16px; }
+        .transfer-from-to { flex:1; background:var(--surface); border-radius:var(--radius-sm); padding:12px; text-align:center; }
+        .transfer-from-to .tft-label { font-size:11px; color:var(--gray); font-weight:500; margin-bottom:4px; }
+        .transfer-from-to .tft-name  { font-size:16px; font-weight:700; color:var(--ink); }
+        .transfer-arrow { width:36px; height:36px; background:var(--maroon); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0; }
+        .balance-display { background:var(--surface-soft); border-radius:var(--radius-md); padding:12px 16px; display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+        .balance-display .bd-label { font-size:13px; color:var(--gray); font-weight:500; }
+        .balance-display .bd-value { font-size:16px; font-weight:700; color:var(--ink); }
+
+        /* Confirm dialog */
+        .confirm-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:999; align-items:center; justify-content:center; }
+        .confirm-overlay.active { display:flex; }
+        .confirm-dialog { background:#f5efe8; border-radius:20px; padding:28px 24px 20px; width:300px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.25); }
+        .confirm-dialog p { font-size:16px; font-weight:500; color:var(--ink); margin-bottom:20px; }
+        .confirm-btns { display:flex; gap:10px; }
+        .btn-yes { flex:1; height:46px; background:var(--success); color:#fff; border:none; border-radius:var(--radius-md); font-size:15px; font-weight:600; font-family:'Poppins',sans-serif; cursor:pointer; }
+        .btn-no  { flex:1; height:46px; background:var(--danger);  color:#fff; border:none; border-radius:var(--radius-md); font-size:15px; font-weight:600; font-family:'Poppins',sans-serif; cursor:pointer; }
+
+        /* Toast */
+        .toast { position:fixed; bottom:calc(90px + var(--safe-bottom) + 12px); left:50%; transform:translateX(-50%) translateY(20px); background:#221615; color:#fff; padding:12px 20px; border-radius:50px; font-size:13px; font-weight:500; opacity:0; transition:all .3s ease; z-index:9999; white-space:nowrap; pointer-events:none; }
+        .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+        button { -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+        /* Top customers */
+        .top-customer-row {
+            display:flex; align-items:center; gap:12px;
+            padding:10px 0; border-bottom:1px solid rgba(93,58,44,0.1);
+        }
+        .top-customer-row:last-child { border-bottom:none; padding-bottom:0; }
+        .tc-rank {
+            width:28px; height:28px; border-radius:50%; display:flex; align-items:center;
+            justify-content:center; font-size:12px; font-weight:700; flex-shrink:0;
+        }
+        .tc-rank.r1 { background:var(--maroon); color:#fff; }
+        .tc-rank.r2 { background:#8b7355; color:#fff; }
+        .tc-rank.r3 { background:#a89078; color:#fff; }
+        .tc-rank.rn { background:var(--surface-soft); color:var(--gray); }
+        .tc-info { flex:1; }
+        .tc-name  { font-size:14px; font-weight:600; color:var(--ink); }
+        .tc-meta  { font-size:11px; color:var(--gray); margin-top:2px; }
+        .tc-total { font-size:15px; font-weight:700; color:var(--maroon); }
+    </style>
+</head>
+<body>
+<div class="main-content-wrapper">
+<div class="main-content">
+
+    <!-- DASHBOARD -->
+    <div id="dashboard-page" class="page active">
+                <div class="dash-header" style="margin-bottom:16px; align-items:center; gap:12px;">
+            <div style="flex:1;">
+                <div style="font-size:22px; font-weight:700; color:var(--ink); letter-spacing:-0.01em; line-height:1.1;">Joshoeixi</div>
+                <div style="font-size:12px; color:var(--gray); font-weight:500; margin-top:1px; letter-spacing:0.04em; text-transform:uppercase;">Vape Shop</div>
+            </div>
+            <div style="width:52px; height:52px; border-radius:50%; overflow:hidden; flex-shrink:0; border:2px solid rgba(107,26,41,0.15); box-shadow:0 4px 14px rgba(60,10,20,0.12);">
+                <img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCANgA2ADASIAAhEBAxEB/8QAHQABAAMBAQEBAQEAAAAAAAAAAAYHCAUEAwIBCf/EAFsQAAIBAwIDBQQECAkHCQUJAQABAgMEBQYRByFBEhMxUWEIInGBFDJCoRUjUmJykbHBFjM3dYKSorKzJDQ2U2N00RclQ0RWc5XT8FeDo8LjGChmk5SktMPE4f/EABoBAQADAQEBAAAAAAAAAAAAAAABAgMEBQb/xAAwEQEAAgICAgEDAwIGAgMAAAAAAQIDERIhBDFBEyIyQlFhI3EkMzShsfAUkWKBwf/aAAwDAQACEQMRAD8Az4ADlfWgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA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AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//2Q==" alt="Joshoeixi Vape Shop" style="width:100%; height:100%; object-fit:cover; display:block;">
+            </div>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-card accent-blue">
+                <div class="sc-icon bg-blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+                <div class="sc-label">Total Stocks</div><div class="sc-value" id="totalStocks">0</div>
+            </div>
+            <div class="stat-card accent-amber">
+                <div class="sc-icon bg-amber"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+                <div class="sc-label">Inventory Value</div><div class="sc-value" id="inventoryValue">₱0.00</div>
+            </div>
+            <div class="stat-card accent-green">
+                <div class="sc-icon bg-green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+                <div class="sc-label">Total Revenue</div><div class="sc-value" id="totalRevenue">₱0.00</div>
+            </div>
+            <div class="stat-card accent-rose">
+                <div class="sc-icon bg-rose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
+                <div class="sc-label">Total Profit</div><div class="sc-value" id="totalProfit">₱0.00</div>
+            </div>
+        </div>
+        <div class="section-card">
+            <div class="section-title">Stock by Category</div>
+            <div class="category-grid">
+                <div class="cat-tile pods-tile">
+                    <div class="ct-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#7c5de6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+                    <div class="ct-count" id="podsStock">0</div><div class="ct-label">Pods</div>
+                </div>
+                <div class="cat-tile battery-tile">
+                    <div class="ct-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="18" height="12" rx="2" ry="2"/><line x1="23" y1="13" x2="23" y2="11"/></svg></div>
+                    <div class="ct-count" id="batteryStock">0</div><div class="ct-label">Batteries</div>
+                </div>
+            </div>
+        </div>
+        <div class="section-card">
+            <div class="section-title">Transaction Overview</div>
+            <div class="txn-grid">
+                <div class="txn-tile"><div class="tt-count" id="totalTransactions">0</div><div class="tt-label">Total</div></div>
+                <div class="txn-tile t-completed"><div class="tt-count" id="completedCount">0</div><div class="tt-label">Completed</div></div>
+                <div class="txn-tile t-reserved"><div class="tt-count" id="reservedCount">0</div><div class="tt-label">Reserved</div></div>
+                <div class="txn-tile t-loan"><div class="tt-count" id="loanCount">0</div><div class="tt-label">Loan</div></div>
+            </div>
+        </div>
+        <div class="section-card">
+            <div class="section-title">Revenue by Payment</div>
+            <div class="payment-grid">
+                <div class="pay-tile">
+                    <div class="pt-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Cash</div>
+                    <div class="pt-amount" id="cashRevenue">₱0.00</div>
+                </div>
+                <div class="pay-tile">
+                    <div class="pt-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>GCash</div>
+                    <div class="pt-amount" id="gcashRevenue">₱0.00</div>
+                </div>
+            </div>
+            <button class="transfer-btn" onclick="openTransferModal()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                Transfer Funds
+            </button>
+        </div>
+        <div class="section-card">
+            <div class="section-title">Top Customers</div>
+            <div id="topCustomersList"><div style="text-align:center;padding:16px;color:var(--gray);font-size:13px;">No sales yet</div></div>
+        </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div id="products-page" class="page">
+        <div class="page-header">
+            <h1>Products</h1>
+            <button class="btn-primary" onclick="openAddProductModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Product
+            </button>
+        </div>
+        <div class="search-bar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9d8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Search products..." id="productSearch" oninput="displayProducts()">
+        </div>
+        <div class="cat-tabs">
+            <button class="tab-btn active" onclick="filterByCategory('all',this)">All</button>
+            <button class="tab-btn" onclick="filterByCategory('Pods',this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                Pods
+            </button>
+            <button class="tab-btn" onclick="filterByCategory('Battery',this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="18" height="12" rx="2" ry="2"/><line x1="23" y1="13" x2="23" y2="11"/></svg>
+                Battery
+            </button>
+        </div>
+        <div id="productsList"></div>
+    </div>
+
+    <!-- SALES -->
+    <div id="sales-page" class="page">
+        <div class="stats-grid" style="margin-bottom:12px;">
+            <div class="stat-card" style="text-align:center;padding:14px 10px;"><div class="sc-label">Transactions</div><div class="sc-value" style="font-size:26px;" id="salesTransactions">0</div></div>
+            <div class="stat-card" style="text-align:center;padding:14px 10px;"><div class="sc-label">Revenue</div><div class="sc-value" style="font-size:22px;" id="salesRevenue">₱0.00</div></div>
+            <div class="stat-card" style="text-align:center;padding:14px 10px;"><div class="sc-label">Cash</div><div class="sc-value" style="font-size:22px;" id="salesCash">₱0.00</div></div>
+            <div class="stat-card" style="text-align:center;padding:14px 10px;"><div class="sc-label">GCash</div><div class="sc-value" style="font-size:22px;" id="salesGcash">₱0.00</div></div>
+        </div>
+        <div class="sales-txn-grid">
+            <div class="sales-txn-tile s-completed"><div class="stt-count" id="salesCompleted">0</div><div class="stt-label">Completed</div></div>
+            <div class="sales-txn-tile s-reserved"><div class="stt-count" id="salesReserved">0</div><div class="stt-label">Reserved</div></div>
+            <div class="sales-txn-tile s-loan"><div class="stt-count" id="salesLoan">0</div><div class="stt-label">Loan</div></div>
+        </div>
+        <div class="page-header">
+            <h1>Sales</h1>
+            <button class="btn-primary" onclick="openAddSaleModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                New Sale
+            </button>
+        </div>
+        <div class="search-bar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9d8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Search sales..." id="saleSearch" oninput="displaySales()">
+        </div>
+        <div class="cat-tabs">
+            <button class="tab-btn active" onclick="filterSalesByStatus('all',this)">All</button>
+            <button class="tab-btn" onclick="filterSalesByStatus('completed',this)">Completed</button>
+            <button class="tab-btn" onclick="filterSalesByStatus('reserved',this)">Reserved</button>
+            <button class="tab-btn" onclick="filterSalesByStatus('loan',this)">Loan</button>
+        </div>
+        <div id="salesList"></div>
+    </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+    <div class="nav-item active" onclick="switchPage('dashboard',this)">
+        <div class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></div>
+        <span>Dashboard</span>
+    </div>
+    <div class="nav-item" onclick="switchPage('products',this)">
+        <div class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
+        <span>Products</span>
+    </div>
+    <div class="nav-item" onclick="switchPage('sales',this)">
+        <div class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <span>Sales</span>
+    </div>
+</nav>
+</div><!-- end main-content-wrapper -->
+
+<!-- ADD/EDIT PRODUCT -->
+<div id="productModal" class="modal">
+    <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-hdr">
+            <h2 id="productModalTitle">Add Product</h2>
+            <button class="modal-close" onclick="closeModal('productModal')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <form id="productForm" onsubmit="saveProduct(event)">
+            <div class="form-group">
+                <label>Category</label>
+                <div class="toggle-group two-col">
+                    <label class="toggle-opt"><input type="radio" name="category" value="Pods" checked onchange="onCategoryChange()"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span>Pods</span></span></label>
+                    <label class="toggle-opt"><input type="radio" name="category" value="Battery" onchange="onCategoryChange()"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="18" height="12" rx="2" ry="2"/><line x1="23" y1="13" x2="23" y2="11"/></svg><span>Battery</span></span></label>
+                </div>
+            </div>
+            <div class="form-group"><label>Brand</label><input type="text" id="brand" class="form-input" placeholder="Enter brand name" required></div>
+            <div class="price-row">
+                <div class="form-group"><label>Raw Price (₱)</label><input type="number" id="rawPrice" class="form-input" step="0.01" placeholder="0.00" required oninput="calculateProductProfit()"></div>
+                <div class="form-group"><label>Selling Price (₱)</label><input type="number" id="sellingPrice" class="form-input" step="0.01" placeholder="0.00" required oninput="calculateProductProfit()"></div>
+            </div>
+            <div class="form-group"><label>Profit per unit</label><input type="text" id="profit" class="form-input profit-field" placeholder="₱0.00" readonly></div>
+            <div class="form-group"><label>Minimum Stock Alert</label><input type="number" id="minStock" class="form-input" placeholder="5" value="5" required></div>
+            <div class="form-group">
+                <label id="variantLabel">Flavors</label>
+                <div id="variantsContainer"></div>
+                <button type="button" class="btn-add-dashed" onclick="addVariant()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span id="addVariantLabel">Add Flavor</span>
+                </button>
+            </div>
+            <input type="hidden" id="productId">
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel-modal" onclick="closeModal('productModal')">Cancel</button>
+                <button type="submit" class="btn-save-modal">Save Product</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- NEW SALE -->
+<div id="saleModal" class="modal">
+    <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-hdr">
+            <h2>New Sale</h2>
+            <button class="modal-close" onclick="closeModal('saleModal')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="form-group"><label>Customer Name</label><input type="text" id="customerName" class="form-input" placeholder="Enter customer name"></div>
+        <div class="form-group">
+            <label>Items</label>
+            <div id="saleItemsDisplay" class="sale-items-list"></div>
+            <div id="itemPicker"></div>
+        </div>
+        <div class="total-row"><span class="tr-label">Total Amount</span><span class="tr-value" id="saleTotal">₱0.00</span></div>
+        <div class="form-group">
+            <label>Status</label>
+            <div class="toggle-group three-col">
+                <label class="toggle-opt"><input type="radio" name="status" value="completed" checked onchange="togglePaymentSection()"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Completed</span></span></label>
+                <label class="toggle-opt"><input type="radio" name="status" value="reserved" onchange="togglePaymentSection()"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Reserved</span></span></label>
+                <label class="toggle-opt"><input type="radio" name="status" value="loan" onchange="togglePaymentSection()"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>Loan</span></span></label>
+            </div>
+        </div>
+        <div id="paymentSection">
+            <div class="form-group">
+                <label>Payment Type</label>
+                <div class="toggle-group two-col">
+                    <label class="toggle-opt"><input type="radio" name="paymentType" value="cash" checked><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span>Cash</span></span></label>
+                    <label class="toggle-opt"><input type="radio" name="paymentType" value="gcash"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg><span>GCash</span></span></label>
+                </div>
+            </div>
+            <div class="price-row">
+                <div class="form-group"><label>Amount Paid (₱)</label><input type="number" id="amountPaid" class="form-input" step="0.01" placeholder="0.00" oninput="calculateChange()"></div>
+                <div class="form-group"><label>Change</label><input type="text" id="changeAmount" class="form-input readonly-field" placeholder="₱0.00" readonly></div>
+            </div>
+        </div>
+        <div id="loanSection" style="display:none;">
+            <div class="loan-section">
+                <div class="loan-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Loan Details</div>
+                <div class="form-group" style="margin-bottom:10px;"><label>Paid Now (₱) <span style="font-weight:400;color:#e57373;">(optional)</span></label><input type="number" id="loanPaidNow" class="form-input" step="0.01" placeholder="0.00" oninput="calculateLoanBalance()"></div>
+                <div class="form-group" style="margin-bottom:0;"><label>Remaining Loan Balance</label><input type="text" id="loanBalance" class="form-input readonly-field" placeholder="₱0.00" readonly style="color:#dc2626;font-weight:700;background:#fff4f4;"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-cancel-modal" onclick="closeModal('saleModal')">Cancel</button>
+            <button type="button" class="btn-save-modal" onclick="reviewSale()">Review Sale</button>
+        </div>
+    </div>
+</div>
+
+<!-- SALE SUMMARY -->
+<div id="saleSummaryModal" class="modal">
+    <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-hdr">
+            <h2>Sale Summary</h2>
+            <button class="modal-close" onclick="closeModal('saleSummaryModal')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div id="saleSummaryContent"></div>
+        <div class="modal-footer">
+            <button class="btn-cancel-modal" onclick="closeModal('saleSummaryModal')">Back</button>
+            <button class="btn-save-modal" onclick="confirmSale()">Confirm Sale</button>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT SALE -->
+<div id="editSaleModal" class="modal">
+    <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-hdr">
+            <h2>Edit Sale</h2>
+            <button class="modal-close" onclick="closeModal('editSaleModal')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="form-group"><label>Customer Name</label><input type="text" id="editCustomerName" class="form-input" placeholder="Customer name"></div>
+        <div class="form-group">
+            <label>Status</label>
+            <div class="toggle-group three-col">
+                <label class="toggle-opt"><input type="radio" name="editStatus" value="completed" onchange="toggleEditPayment()"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Completed</span></span></label>
+                <label class="toggle-opt"><input type="radio" name="editStatus" value="reserved" onchange="toggleEditPayment()"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Reserved</span></span></label>
+                <label class="toggle-opt"><input type="radio" name="editStatus" value="loan" onchange="toggleEditPayment()"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>Loan</span></span></label>
+            </div>
+        </div>
+        <div id="editPaymentSection">
+            <div class="form-group">
+                <label>Payment Type</label>
+                <div class="toggle-group two-col">
+                    <label class="toggle-opt"><input type="radio" name="editPaymentType" value="cash" checked><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span>Cash</span></span></label>
+                    <label class="toggle-opt"><input type="radio" name="editPaymentType" value="gcash"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg><span>GCash</span></span></label>
+                </div>
+            </div>
+        </div>
+        <div id="editLoanSection" style="display:none;">
+            <div class="loan-section">
+                <div class="loan-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Loan Balance</div>
+                <div class="form-group" style="margin-bottom:0;"><label>Remaining Loan (₱)</label><input type="number" id="editLoanAmount" class="form-input" step="0.01" placeholder="0.00"></div>
+            </div>
+        </div>
+        <input type="hidden" id="editSaleId">
+        <div class="modal-footer">
+            <button class="btn-cancel-modal" onclick="closeModal('editSaleModal')">Cancel</button>
+            <button class="btn-save-modal" onclick="saveEditSale()">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- TRANSFER -->
+<div id="transferModal" class="modal">
+    <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-hdr">
+            <h2>Transfer Funds</h2>
+            <button class="modal-close" onclick="closeModal('transferModal')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="form-group">
+            <label>Direction</label>
+            <div class="toggle-group two-col">
+                <label class="toggle-opt"><input type="radio" name="transferDir" value="cash-to-gcash" checked onchange="updateTransferUI()"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span>Cash → GCash</span></span></label>
+                <label class="toggle-opt"><input type="radio" name="transferDir" value="gcash-to-cash" onchange="updateTransferUI()"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg><span>GCash → Cash</span></span></label>
+            </div>
+        </div>
+        <div class="balance-display">
+            <div><div class="bd-label">Cash Balance</div><div class="bd-value" id="tfCashBal">₱0.00</div></div>
+            <div style="text-align:right;"><div class="bd-label">GCash Balance</div><div class="bd-value" id="tfGcashBal">₱0.00</div></div>
+        </div>
+        <div class="transfer-direction">
+            <div class="transfer-from-to"><div class="tft-label">From</div><div class="tft-name" id="tfFrom">Cash</div></div>
+            <div class="transfer-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+            <div class="transfer-from-to"><div class="tft-label">To</div><div class="tft-name" id="tfTo">GCash</div></div>
+        </div>
+        <div class="form-group">
+            <label>Amount to Transfer (₱)</label>
+            <input type="number" id="transferAmount" class="form-input" step="0.01" placeholder="0.00" oninput="validateTransferAmount()">
+            <div id="transferError" style="color:#dc2626;font-size:12px;margin-top:6px;display:none;"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel-modal" onclick="closeModal('transferModal')">Cancel</button>
+            <button class="btn-save-modal" onclick="doTransfer()">Transfer</button>
+        </div>
+    </div>
+</div>
+
+<!-- CONFIRM -->
+<div id="confirmOverlay" class="confirm-overlay">
+    <div class="confirm-dialog">
+        <p id="confirmMsg">Are you sure?</p>
+        <div class="confirm-btns"><button class="btn-yes" onclick="confirmAction()">Yes</button><button class="btn-no" onclick="closeConfirm()">No</button></div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let products    = JSON.parse(localStorage.getItem('products'))    || [];
+let sales       = JSON.parse(localStorage.getItem('sales'))       || [];
+let cashBalance = 0, gcashBalance = 0;
+let currentCategory = 'all', currentSaleStatus = 'all';
+let currentAction = null, currentItemId = null, tempSale = null;
+let saleItems = [], pickerProductId = null, pickerVariant = null, pickerQty = 1;
+let editSaleItems = [], editPickerProductId = null, editPickerVariant = null, editPickerQty = 1;
+
+function init() {
+    updateDashboard(); displayProducts(); displaySales();
+    document.getElementById('variantsContainer').innerHTML = '';
+    addVariant();
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+function switchPage(page, el) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    if (el) el.classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(page + '-page').classList.add('active');
+    // Always reset to top when switching tabs
+    const mc = document.querySelector('.main-content');
+    if (mc) mc.scrollTop = 0;
+    window.scrollTo(0, 0);
+    if (page === 'dashboard') updateDashboard();
+    if (page === 'products')  displayProducts();
+    if (page === 'sales')     displaySales();
+}
+
+function updateDashboard() {
+    const totalStocks    = products.reduce((a,p)=>a+p.variants.reduce((s,v)=>s+v.stock,0),0);
+    const podsStock      = products.filter(p=>p.category==='Pods').reduce((a,p)=>a+p.variants.reduce((s,v)=>s+v.stock,0),0);
+    const batteryStock   = products.filter(p=>p.category==='Battery').reduce((a,p)=>a+p.variants.reduce((s,v)=>s+v.stock,0),0);
+    const inventoryValue = products.reduce((a,p)=>a+p.rawPrice*p.variants.reduce((s,v)=>s+v.stock,0),0);
+    const completed      = sales.filter(s=>s.status==='completed'||s.status==='Completed');
+    const totalRevenue   = completed.reduce((a,s)=>a+s.total,0);
+    const totalProfit    = completed.reduce((a,s)=>a+s.items.reduce((b,item)=>{
+        const p=products.find(x=>x.id===item.productId); return p?b+(p.sellingPrice-p.rawPrice)*item.qty:b;
+    },0),0);
+    cashBalance  = completed.filter(s=>s.paymentType==='cash'||s.paymentType==='Cash').reduce((a,s)=>a+s.total,0);
+    gcashBalance = completed.filter(s=>s.paymentType==='gcash'||s.paymentType==='GCash'||s.paymentType==='Gcash').reduce((a,s)=>a+s.total,0);
+    const transfers = JSON.parse(localStorage.getItem('transfers')) || [];
+    transfers.forEach(t => {
+        if (t.dir==='cash-to-gcash') { cashBalance-=t.amount; gcashBalance+=t.amount; }
+        else { gcashBalance-=t.amount; cashBalance+=t.amount; }
+    });
+    setText('totalStocks',totalStocks); setText('inventoryValue',fmt(inventoryValue));
+    setText('totalRevenue',fmt(totalRevenue)); setText('totalProfit',fmt(totalProfit));
+    setText('podsStock',podsStock); setText('batteryStock',batteryStock);
+    setText('totalTransactions',sales.length);
+    setText('completedCount',sales.filter(s=>s.status==='completed'||s.status==='Completed').length);
+    setText('reservedCount',sales.filter(s=>s.status==='reserved'||s.status==='Reserved').length);
+    setText('loanCount',sales.filter(s=>s.status==='loan'||s.status==='Loan').length);
+    setText('cashRevenue',fmt(cashBalance)); setText('gcashRevenue',fmt(gcashBalance));
+    // Top customers
+    const custMap={};
+    sales.filter(s=>s.status.toLowerCase()==='completed').forEach(s=>{
+        if(!custMap[s.customer]) custMap[s.customer]={total:0,count:0};
+        custMap[s.customer].total+=s.total; custMap[s.customer].count++;
+    });
+    const custArr=Object.entries(custMap).sort((a,b)=>b[1].total-a[1].total).slice(0,5);
+    const tcEl=document.getElementById('topCustomersList');
+    if(tcEl){
+        if(!custArr.length){tcEl.innerHTML='<div style="text-align:center;padding:16px;color:var(--gray);font-size:13px;">No completed sales yet</div>';}
+        else{tcEl.innerHTML=custArr.map(([name,d],i)=>{
+            const rankCls=i===0?'r1':i===1?'r2':i===2?'r3':'rn';
+            return `<div class="top-customer-row">
+                <div class="tc-rank ${rankCls}">${i+1}</div>
+                <div class="tc-info">
+                    <div class="tc-name">${name}</div>
+                    <div class="tc-meta">${d.count} transaction${d.count!==1?'s':''}</div>
+                </div>
+                <div class="tc-total">${fmt(d.total)}</div>
+            </div>`;
+        }).join('');}
+    }
+}
+
+function displayProducts() {
+    const container = document.getElementById('productsList');
+    const searchTerm = (document.getElementById('productSearch')?.value||'').toLowerCase();
+    let list = products;
+    if (currentCategory!=='all') list=list.filter(p=>p.category===currentCategory);
+    if (searchTerm) list=list.filter(p=>p.brand.toLowerCase().includes(searchTerm)||p.variants.some(v=>v.name.toLowerCase().includes(searchTerm)));
+    if (!list.length) {
+        container.innerHTML=`<div class="empty-state"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#8b7355" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><div class="es-title">No products found</div><div class="es-sub">Add your first product to get started</div></div>`;
+        return;
+    }
+    container.innerHTML = list.map(p => {
+        const total=p.variants.reduce((s,v)=>s+v.stock,0);
+        const isLow=p.variants.some(v=>v.stock<=p.minStock);
+        const varLabel=p.category==='Pods'?'Flavors':'Colors';
+        return `<div class="product-card">
+            <div class="pc-top">
+                <div><div class="pc-name">${p.brand}</div><span class="pc-badge">${p.category}</span></div>
+                <div class="pc-actions">
+                    <button class="btn-icon-sm btn-edit-sm" onclick="editProduct('${p.id}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button class="btn-icon-sm btn-del-sm" onclick="deleteProduct('${p.id}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+                </div>
+            </div>
+            <div class="pc-price-row">
+                <div class="pc-price-box"><div class="pbl">Raw Price</div><div class="pbv">${fmt(p.rawPrice)}</div></div>
+                <div class="pc-price-box"><div class="pbl">Selling Price</div><div class="pbv">${fmt(p.sellingPrice)}</div></div>
+                <div class="pc-price-box"><div class="pbl">Profit</div><div class="pbv green">${fmt(p.sellingPrice-p.rawPrice)}</div></div>
+                <div class="pc-price-box"><div class="pbl">Min Alert</div><div class="pbv">${p.minStock} units</div></div>
+            </div>
+            <hr class="pc-divider">
+            <div class="pc-variants-title">${varLabel} (${total} total)</div>
+            <div class="pc-variants">${p.variants.map(v=>`<div class="variant-chip"><span>${v.name}:</span><span class="vc-stock ${v.stock<=p.minStock?'low':''}">${v.stock}</span></div>`).join('')}</div>
+            ${isLow?`<div class="low-stock-banner"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Low Stock Alert!</div>`:''}
+        </div>`;
+    }).join('');
+}
+
+function filterByCategory(cat,btn) { currentCategory=cat; document.querySelectorAll('#products-page .tab-btn').forEach(b=>b.classList.remove('active')); if(btn)btn.classList.add('active'); displayProducts(); }
+
+function openAddProductModal() {
+    document.getElementById('productForm').reset();
+    document.getElementById('productId').value=''; document.getElementById('productModalTitle').textContent='Add Product';
+    document.getElementById('variantsContainer').innerHTML=''; document.getElementById('profit').value='';
+    document.getElementById('variantLabel').textContent='Flavors'; document.getElementById('addVariantLabel').textContent='Add Flavor';
+    addVariant(); document.getElementById('productModal').classList.add('active');
+}
+
+function onCategoryChange() {
+    const isPods=document.querySelector('input[name="category"]:checked')?.value==='Pods';
+    document.getElementById('variantLabel').textContent=isPods?'Flavors':'Colors';
+    document.getElementById('addVariantLabel').textContent=isPods?'Add Flavor':'Add Color';
+    document.querySelectorAll('.variant-name-input').forEach(inp=>inp.placeholder=isPods?'Flavor name':'Color name');
+}
+
+function addVariant() {
+    const isPods=(document.querySelector('input[name="category"]:checked')?.value||'Pods')==='Pods';
+    const container=document.getElementById('variantsContainer');
+    const div=document.createElement('div'); div.className='variant-input-wrap';
+    div.innerHTML=`<div class="variant-row"><input type="text" class="form-input variant-name-input" placeholder="${isPods?'Flavor name':'Color name'}" required><input type="number" class="form-input stock-input variant-stock-input" placeholder="Stock" required><button type="button" class="btn-remove-var" onclick="this.closest('.variant-input-wrap').remove()">×</button></div>`;
+    container.appendChild(div);
+}
+
+function calculateProductProfit() {
+    const raw=parseFloat(document.getElementById('rawPrice').value)||0;
+    const sell=parseFloat(document.getElementById('sellingPrice').value)||0;
+    document.getElementById('profit').value=fmt(sell-raw);
+}
+
+function saveProduct(e) {
+    e.preventDefault();
+    const variants=[];
+    document.querySelectorAll('#variantsContainer .variant-input-wrap').forEach(wrap=>{
+        const name=wrap.querySelector('.variant-name-input').value.trim();
+        const stock=parseInt(wrap.querySelector('.variant-stock-input').value);
+        if(name&&!isNaN(stock)) variants.push({name,stock});
+    });
+    if(!variants.length){showToast('Add at least one variant');return;}
+    const product={
+        id:document.getElementById('productId').value||Date.now().toString(),
+        category:document.querySelector('input[name="category"]:checked').value,
+        brand:document.getElementById('brand').value.trim(),
+        rawPrice:parseFloat(document.getElementById('rawPrice').value),
+        sellingPrice:parseFloat(document.getElementById('sellingPrice').value),
+        minStock:parseInt(document.getElementById('minStock').value),
+        variants
+    };
+    const idx=products.findIndex(p=>p.id===product.id);
+    if(idx>=0) products[idx]=product; else products.push(product);
+    localStorage.setItem('products',JSON.stringify(products));
+    closeModal('productModal'); displayProducts(); updateDashboard();
+    showToast(idx>=0?'Product updated!':'Product added!');
+}
+
+function editProduct(id) {
+    const p=products.find(x=>x.id===id); if(!p) return;
+    document.getElementById('productModalTitle').textContent='Edit Product';
+    document.getElementById('productId').value=p.id;
+    document.querySelector(`input[name="category"][value="${p.category}"]`).checked=true;
+    document.getElementById('brand').value=p.brand; document.getElementById('rawPrice').value=p.rawPrice;
+    document.getElementById('sellingPrice').value=p.sellingPrice; document.getElementById('minStock').value=p.minStock;
+    document.getElementById('profit').value=fmt(p.sellingPrice-p.rawPrice);
+    document.getElementById('variantLabel').textContent=p.category==='Pods'?'Flavors':'Colors';
+    document.getElementById('addVariantLabel').textContent=p.category==='Pods'?'Add Flavor':'Add Color';
+    const container=document.getElementById('variantsContainer'); container.innerHTML='';
+    p.variants.forEach(v=>{
+        const div=document.createElement('div'); div.className='variant-input-wrap';
+        div.innerHTML=`<div class="variant-row"><input type="text" class="form-input variant-name-input" value="${v.name}" placeholder="${p.category==='Pods'?'Flavor':'Color'} name" required><input type="number" class="form-input stock-input variant-stock-input" value="${v.stock}" placeholder="Stock" required><button type="button" class="btn-remove-var" onclick="this.closest('.variant-input-wrap').remove()">×</button></div>`;
+        container.appendChild(div);
+    });
+    document.getElementById('productModal').classList.add('active');
+}
+
+function deleteProduct(id) { currentAction='deleteProduct'; currentItemId=id; document.getElementById('confirmMsg').textContent='Delete this product?'; document.getElementById('confirmOverlay').classList.add('active'); }
+
+function displaySales() {
+    const container=document.getElementById('salesList');
+    const searchTerm=(document.getElementById('saleSearch')?.value||'').toLowerCase();
+    let list=[...sales];
+    if(currentSaleStatus!=='all') list=list.filter(s=>s.status.toLowerCase()===currentSaleStatus.toLowerCase());
+    if(searchTerm) list=list.filter(s=>{
+        const d=new Date(s.date).toLocaleDateString().toLowerCase();
+        return s.customer.toLowerCase().includes(searchTerm)
+            || s.status.toLowerCase().includes(searchTerm)
+            || (s.paymentType||'').toLowerCase().includes(searchTerm)
+            || d.includes(searchTerm)
+            || fmt(s.total).toLowerCase().includes(searchTerm)
+            || s.items.some(i=>i.name.toLowerCase().includes(searchTerm)||i.variantName.toLowerCase().includes(searchTerm));
+    });
+    list.sort((a,b)=>new Date(b.date)-new Date(a.date));
+    if(!list.length) {
+        container.innerHTML=`<div class="empty-state"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#8b7355" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><div class="es-title">No sales found</div><div class="es-sub">Create your first sale to get started</div></div>`;
+    } else {
+        container.innerHTML=list.map(s=>{
+            const loanInfo=(s.status==='loan'||s.status==='Loan')?`<div class="sm-item"><span>Loan Bal:</span><strong style="color:#dc2626;">${fmt(s.loanBalance||0)}</strong></div>`:'';
+            return `<div class="sale-card">
+                <div class="sale-card-top"><div class="sale-customer">${s.customer}</div><span class="sale-status-badge status-${s.status.toLowerCase()}">${s.status}</span></div>
+                <div class="sale-meta">
+                    <div class="sm-item"><span>Date:</span><strong>${new Date(s.date).toLocaleDateString()}</strong></div>
+                    <div class="sm-item"><span>Total:</span><strong>${fmt(s.total)}</strong></div>
+                    <div class="sm-item"><span>Payment:</span><strong>${s.paymentType==='none'?'N/A':s.paymentType}</strong></div>
+                    ${loanInfo}
+                </div>
+                <hr class="pc-divider">
+                <div class="pc-variants-title">Items:</div>
+                <div class="pc-variants">${s.items.map(i=>`<div class="variant-chip"><span>${i.name} – ${i.variantName}</span><span class="vc-stock">×${i.qty}</span></div>`).join('')}</div>
+                <div style="display:flex;gap:6px;margin-top:12px;">
+                    <button class="btn-icon-sm btn-edit-sm" onclick="openEditSaleModal('${s.id}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button class="btn-icon-sm btn-del-sm" onclick="deleteSale('${s.id}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+                    ${(s.status!=='completed'&&s.status!=='Completed')?`<button class="btn-icon-sm" style="background:#d1fae5;color:#059669;" onclick="markCompleted('${s.id}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>`:''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+    updateSalesStats();
+}
+
+function updateSalesStats() {
+    const completed=sales.filter(s=>s.status==='completed'||s.status==='Completed');
+    setText('salesTransactions',sales.length);
+    setText('salesRevenue',fmt(completed.reduce((a,s)=>a+s.total,0)));
+    setText('salesCash',fmt(completed.filter(s=>s.paymentType==='cash'||s.paymentType==='Cash').reduce((a,s)=>a+s.total,0)));
+    setText('salesGcash',fmt(completed.filter(s=>s.paymentType==='gcash'||s.paymentType==='GCash'||s.paymentType==='Gcash').reduce((a,s)=>a+s.total,0)));
+    setText('salesCompleted',sales.filter(s=>s.status==='completed'||s.status==='Completed').length);
+    setText('salesReserved',sales.filter(s=>s.status==='reserved'||s.status==='Reserved').length);
+    setText('salesLoan',sales.filter(s=>s.status==='loan'||s.status==='Loan').length);
+}
+
+function filterSalesByStatus(status,btn) { currentSaleStatus=status; document.querySelectorAll('#sales-page .cat-tabs .tab-btn').forEach(b=>b.classList.remove('active')); if(btn)btn.classList.add('active'); displaySales(); }
+
+function openAddSaleModal() {
+    const saleModal = document.getElementById('saleModal');
+    if (!saleModal) return;
+
+    // Open immediately, then initialize content safely.
+    saleModal.classList.add('active');
+    saleItems=[];
+
+    const customerName = document.getElementById('customerName');
+    const amountPaid = document.getElementById('amountPaid');
+    const changeAmount = document.getElementById('changeAmount');
+    const loanPaidNow = document.getElementById('loanPaidNow');
+    const loanBalance = document.getElementById('loanBalance');
+    const paymentSection = document.getElementById('paymentSection');
+    const loanSection = document.getElementById('loanSection');
+
+    if (customerName) customerName.value='';
+    if (amountPaid) amountPaid.value='';
+    if (changeAmount) changeAmount.value='';
+    if (loanPaidNow) loanPaidNow.value='';
+    if (loanBalance) loanBalance.value='';
+
+    const statusCompleted = document.querySelector('input[name="status"][value="completed"]');
+    const paymentCash = document.querySelector('input[name="paymentType"][value="cash"]');
+    if (statusCompleted) statusCompleted.checked=true;
+    if (paymentCash) paymentCash.checked=true;
+
+    if (paymentSection) paymentSection.style.display='block';
+    if (loanSection) loanSection.style.display='none';
+
+    renderSaleItems();
+    showItemPicker();
+    updateSaleTotal();
+}
+
+function showItemPicker() {
+    const container=document.getElementById('itemPicker');
+    if(!products.length){container.innerHTML=`<p style="font-size:13px;color:var(--gray);text-align:center;padding:12px;">No products available.</p>`;return;}
+    pickerProductId=null; pickerVariant=null; pickerQty=1; renderPicker();
+}
+
+function renderPicker() {
+    const container=document.getElementById('itemPicker');
+    const step=pickerProductId?(pickerVariant?'qty':'variant'):'product';
+    if(step==='product') {
+        container.innerHTML=`<div class="item-picker"><div class="picker-label">Select Product</div><div class="picker-grid">${products.map(p=>`<div class="picker-chip" onclick="pickProduct('${p.id}')">${p.brand}<span class="pc-sub">${p.category}</span></div>`).join('')}</div><div class="picker-actions"><button class="btn-picker-cancel" onclick="hidePicker()">Cancel</button><button class="btn-picker-add" disabled>Add</button></div></div>`;
+    } else if(step==='variant') {
+        const p=products.find(x=>x.id===pickerProductId);
+        container.innerHTML=`<div class="item-picker"><div class="picker-label">Select Product</div><div class="picker-grid">${products.map(x=>`<div class="picker-chip ${x.id===pickerProductId?'selected':''}" onclick="pickProduct('${x.id}')">${x.brand}<span class="pc-sub">${x.category}</span></div>`).join('')}</div><div class="picker-label" style="margin-top:8px;">Select ${p.category==='Pods'?'Flavor':'Color'}</div><div class="picker-grid">${p.variants.map(v=>`<div class="picker-chip ${v.stock===0?'out-of-stock':''}" onclick="${v.stock>0?`pickVariant('${v.name}')`:''}"> ${v.name}<span class="pc-sub" style="${v.stock<=p.minStock&&v.stock>0?'color:#dc2626;':''}">${v.stock===0?'Out of stock':v.stock+' left'}</span></div>`).join('')}</div><div class="picker-actions"><button class="btn-picker-cancel" onclick="resetPicker()">Back</button><button class="btn-picker-add" disabled>Add</button></div></div>`;
+    } else {
+        const p=products.find(x=>x.id===pickerProductId); const v=p.variants.find(x=>x.name===pickerVariant);
+        container.innerHTML=`<div class="item-picker"><div class="picker-label">Select Product</div><div class="picker-grid">${products.map(x=>`<div class="picker-chip ${x.id===pickerProductId?'selected':''}" onclick="pickProduct('${x.id}')">${x.brand}<span class="pc-sub">${x.category}</span></div>`).join('')}</div><div class="picker-label" style="margin-top:8px;">Select ${p.category==='Pods'?'Flavor':'Color'}</div><div class="picker-grid">${p.variants.map(x=>`<div class="picker-chip ${x.name===pickerVariant?'selected':''} ${x.stock===0?'out-of-stock':''}" onclick="${x.stock>0?`pickVariant('${x.name}')`:''}"> ${x.name}<span class="pc-sub">${x.stock===0?'Out of stock':x.stock+' left'}</span></div>`).join('')}</div><div class="qty-row"><span class="qty-label">Quantity</span><input type="number" class="qty-input" id="pickerQtyInput" value="${pickerQty}" min="1" max="${v.stock}" oninput="pickerQty=parseInt(this.value)||1"></div><div class="picker-actions"><button class="btn-picker-cancel" onclick="resetPicker()">Back</button><button class="btn-picker-add ready" onclick="addPickedItem()">Add</button></div></div>`;
+    }
+}
+
+function pickProduct(id){pickerProductId=id;pickerVariant=null;pickerQty=1;renderPicker();}
+function pickVariant(name){pickerVariant=name;pickerQty=1;renderPicker();}
+function resetPicker(){pickerProductId=null;pickerVariant=null;renderPicker();}
+function hidePicker(){document.getElementById('itemPicker').innerHTML=`<button class="btn-add-dashed" onclick="showItemPicker()" style="margin-bottom:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Item</button>`;}
+
+function addPickedItem() {
+    const p=products.find(x=>x.id===pickerProductId); const v=p.variants.find(x=>x.name===pickerVariant);
+    const qty=pickerQty||1; if(qty>v.stock){showToast(`Only ${v.stock} in stock`);return;}
+    saleItems.push({productId:p.id,variantName:v.name,name:p.brand,qty,price:p.sellingPrice*qty,unitPrice:p.sellingPrice});
+    renderSaleItems(); updateSaleTotal(); showItemPicker();
+}
+
+function renderSaleItems() {
+    document.getElementById('saleItemsDisplay').innerHTML=saleItems.map((item,i)=>`<div class="sale-item-chip"><div class="sic-left"><div class="sic-name">${item.name}</div><div class="sic-meta">${item.variantName} • ×${item.qty}</div></div><span class="sic-price">${fmt(item.price)}</span><button class="sic-remove" onclick="removeSaleItem(${i})">×</button></div>`).join('');
+}
+
+function removeSaleItem(i){saleItems.splice(i,1);renderSaleItems();updateSaleTotal();}
+
+function updateSaleTotal() {
+    const total=saleItems.reduce((a,i)=>a+i.price,0);
+    document.getElementById('saleTotal').textContent=fmt(total);
+    calculateChange(); calculateLoanBalance();
+}
+
+function togglePaymentSection() {
+    const rawStatus=document.querySelector('input[name="status"]:checked').value;
+    const status=rawStatus.charAt(0).toUpperCase()+rawStatus.slice(1);
+    document.getElementById('paymentSection').style.display=status==='completed'?'block':'none';
+    document.getElementById('loanSection').style.display=status==='loan'?'block':'none';
+}
+
+function calculateChange() {
+    const total=saleItems.reduce((a,i)=>a+i.price,0);
+    const paid=parseFloat(document.getElementById('amountPaid').value)||0;
+    document.getElementById('changeAmount').value=fmt(paid-total);
+}
+
+function calculateLoanBalance() {
+    const total=saleItems.reduce((a,i)=>a+i.price,0);
+    const paidNow=parseFloat(document.getElementById('loanPaidNow').value)||0;
+    document.getElementById('loanBalance').value=fmt(Math.max(0,total-paidNow));
+}
+
+function reviewSale() {
+    if(!document.getElementById('customerName').value.trim()){showToast('Enter customer name');return;}
+    if(!saleItems.length){showToast('Add at least one item');return;}
+    const total=saleItems.reduce((a,i)=>a+i.price,0);
+    const rawStatus=document.querySelector('input[name="status"]:checked').value;
+    const status=rawStatus.charAt(0).toUpperCase()+rawStatus.slice(1);
+    const rawPT=status.toLowerCase()==='completed'?document.querySelector('input[name="paymentType"]:checked').value:'none';
+    const paymentType=rawPT==='none'?'none':rawPT.charAt(0).toUpperCase()+rawPT.slice(1);
+    const amountPaid=status==='completed'?parseFloat(document.getElementById('amountPaid').value)||total:total;
+    const loanPaidNow=status.toLowerCase()==='loan'?parseFloat(document.getElementById('loanPaidNow').value)||0:0;
+    const loanBalance=status.toLowerCase()==='loan'?Math.max(0,total-loanPaidNow):0;
+    tempSale={id:Date.now().toString(),date:new Date().toISOString(),customer:document.getElementById('customerName').value.trim(),items:saleItems.map(i=>({...i})),total,paymentType,status,amountPaid,change:amountPaid-total,loanPaidNow,loanBalance};
+    const sc=document.getElementById('saleSummaryContent');
+    sc.innerHTML=`<div class="summary-block"><p><strong>Customer:</strong> ${tempSale.customer}</p><p><strong>Date:</strong> ${new Date().toLocaleString()}</p><p><strong>Status:</strong> ${tempSale.status}</p></div><div style="margin-bottom:14px;">${tempSale.items.map(i=>`<div class="si-row"><span class="si-name">${i.name} – ${i.variantName} ×${i.qty}</span><span class="si-price">${fmt(i.price)}</span></div>`).join('')}</div><div class="summary-total-box"><div class="stb-row"><span>Total</span><span>${fmt(tempSale.total)}</span></div><div class="stb-row"><span>Payment</span><span>${tempSale.paymentType==='none'?'N/A':tempSale.paymentType}</span></div>${tempSale.status==='completed'?`<div class="stb-row"><span>Amount Paid</span><span>${fmt(tempSale.amountPaid)}</span></div><div class="stb-row"><span>Change</span><span>${fmt(tempSale.change)}</span></div>`:''}${tempSale.status==='loan'?`<div class="stb-row"><span>Paid Now</span><span>${fmt(tempSale.loanPaidNow)}</span></div><div class="stb-row" style="color:#fca5a5;"><span>Loan Balance</span><span>${fmt(tempSale.loanBalance)}</span></div>`:''}</div>`;
+    closeModal('saleModal'); document.getElementById('saleSummaryModal').classList.add('active');
+}
+
+function confirmSale() {
+    tempSale.items.forEach(item=>{
+        const p=products.find(x=>x.id===item.productId);
+        if(p){const v=p.variants.find(x=>x.name===item.variantName);if(v)v.stock-=item.qty;}
+    });
+    sales.push(tempSale);
+    localStorage.setItem('sales',JSON.stringify(sales)); localStorage.setItem('products',JSON.stringify(products));
+    closeModal('saleSummaryModal'); displaySales(); displayProducts(); updateDashboard();
+    showToast('Sale confirmed!');
+}
+
+function openEditSaleModal(id) {
+    const s=sales.find(x=>x.id===id); if(!s) return;
+    document.getElementById('editSaleId').value=id;
+    document.getElementById('editCustomerName').value=s.customer;
+    // Load existing items into editSaleItems (deep copy)
+    editSaleItems=s.items.map(i=>({...i}));
+    editPickerProductId=null; editPickerVariant=null; editPickerQty=1;
+    renderEditSaleItems();
+    showEditItemPicker();
+    updateEditSaleTotal();
+    // Set status (try lowercase match)
+    const statusVal=s.status.toLowerCase();
+    const sr=document.querySelector(`input[name="editStatus"][value="${statusVal}"]`); if(sr) sr.checked=true;
+    // Set payment type (try lowercase match)
+    const ptVal=(s.paymentType||'').toLowerCase();
+    const pr=document.querySelector(`input[name="editPaymentType"][value="${ptVal}"]`); if(pr) pr.checked=true;
+    document.getElementById('editLoanAmount').value=s.loanBalance||0;
+    document.getElementById('editAmountPaid').value=s.amountPaid||'';
+    calcEditChange();
+    toggleEditPayment();
+    document.getElementById('editSaleModal').classList.add('active');
+}
+
+function renderEditSaleItems() {
+    document.getElementById('editSaleItemsDisplay').innerHTML=editSaleItems.map((item,i)=>`
+        <div class="sale-item-chip">
+            <div class="sic-left">
+                <div class="sic-name">${item.name}</div>
+                <div class="sic-meta">${item.variantName} • ×${item.qty}</div>
+            </div>
+            <span class="sic-price">${fmt(item.price)}</span>
+            <button class="sic-remove" onclick="removeEditSaleItem(${i})">×</button>
+        </div>`).join('');
+}
+
+function removeEditSaleItem(i){
+    // restore stock
+    const item=editSaleItems[i];
+    const p=products.find(x=>x.id===item.productId);
+    if(p){const v=p.variants.find(x=>x.name===item.variantName);if(v)v.stock+=item.qty;}
+    editSaleItems.splice(i,1);
+    renderEditSaleItems(); updateEditSaleTotal();
+}
+
+function updateEditSaleTotal(){
+    const total=editSaleItems.reduce((a,i)=>a+i.price,0);
+    document.getElementById('editSaleTotal').textContent=fmt(total);
+    calcEditChange();
+}
+
+function calcEditChange(){
+    const total=editSaleItems.reduce((a,i)=>a+i.price,0);
+    const paid=parseFloat(document.getElementById('editAmountPaid').value)||0;
+    document.getElementById('editChangeAmount').value=fmt(paid-total);
+}
+
+function showEditItemPicker(){
+    const container=document.getElementById('editItemPicker');
+    if(!products.length){container.innerHTML='<p style="font-size:13px;color:var(--gray);text-align:center;padding:12px;">No products.</p>';return;}
+    editPickerProductId=null; editPickerVariant=null; editPickerQty=1;
+    renderEditPicker();
+}
+
+function renderEditPicker(){
+    const container=document.getElementById('editItemPicker');
+    const step=editPickerProductId?(editPickerVariant?'qty':'variant'):'product';
+    if(step==='product'){
+        container.innerHTML=`<div class="item-picker"><div class="picker-label">Add Item</div><div class="picker-grid">${products.map(p=>`<div class="picker-chip" onclick="editPickProduct('${p.id}')">${p.brand}<span class="pc-sub">${p.category}</span></div>`).join('')}</div><div class="picker-actions"><button class="btn-picker-cancel" onclick="hideEditPicker()">Cancel</button><button class="btn-picker-add" disabled>Add</button></div></div>`;
+    } else if(step==='variant'){
+        const p=products.find(x=>x.id===editPickerProductId);
+        container.innerHTML=`<div class="item-picker"><div class="picker-label">Select ${p.category==='Pods'?'Flavor':'Color'}</div><div class="picker-grid">${p.variants.map(v=>`<div class="picker-chip ${v.stock===0?'out-of-stock':''}" onclick="${v.stock>0?`editPickVariant('${v.name}')`:''}"> ${v.name}<span class="pc-sub">${v.stock===0?'Out of stock':v.stock+' left'}</span></div>`).join('')}</div><div class="picker-actions"><button class="btn-picker-cancel" onclick="editResetPicker()">Back</button><button class="btn-picker-add" disabled>Add</button></div></div>`;
+    } else {
+        const p=products.find(x=>x.id===editPickerProductId); const v=p.variants.find(x=>x.name===editPickerVariant);
+        container.innerHTML=`<div class="item-picker"><div class="picker-label">Quantity</div><div class="qty-row"><span class="qty-label">Qty</span><input type="number" class="qty-input" value="${editPickerQty}" min="1" max="${v.stock}" oninput="editPickerQty=parseInt(this.value)||1"></div><div class="picker-actions"><button class="btn-picker-cancel" onclick="editResetPicker()">Back</button><button class="btn-picker-add ready" onclick="addEditPickedItem()">Add</button></div></div>`;
+    }
+}
+
+function editPickProduct(id){editPickerProductId=id;editPickerVariant=null;editPickerQty=1;renderEditPicker();}
+function editPickVariant(name){editPickerVariant=name;editPickerQty=1;renderEditPicker();}
+function editResetPicker(){editPickerProductId=null;editPickerVariant=null;renderEditPicker();}
+function hideEditPicker(){document.getElementById('editItemPicker').innerHTML=`<button class="btn-add-dashed" onclick="showEditItemPicker()" style="margin-bottom:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Item</button>`;}
+
+function addEditPickedItem(){
+    const p=products.find(x=>x.id===editPickerProductId); const v=p.variants.find(x=>x.name===editPickerVariant);
+    const qty=editPickerQty||1; if(qty>v.stock){showToast(`Only ${v.stock} in stock`);return;}
+    // Temporarily deduct from stock preview
+    editSaleItems.push({productId:p.id,variantName:v.name,name:p.brand,qty,price:p.sellingPrice*qty,unitPrice:p.sellingPrice});
+    renderEditSaleItems(); updateEditSaleTotal(); showEditItemPicker();
+}
+
+function toggleEditPayment() {
+    const status=(document.querySelector('input[name="editStatus"]:checked')?.value||'').toLowerCase();
+    document.getElementById('editPaymentSection').style.display=status==='completed'?'block':'none';
+    document.getElementById('editLoanSection').style.display=status==='loan'?'block':'none';
+}
+
+function saveEditSale() {
+    const id=document.getElementById('editSaleId').value;
+    const s=sales.find(x=>x.id===id); if(!s) return;
+    // Restore stock for OLD items
+    s.items.forEach(item=>{
+        const p=products.find(x=>x.id===item.productId);
+        if(p){const v=p.variants.find(x=>x.name===item.variantName);if(v)v.stock+=item.qty;}
+    });
+    // Deduct stock for NEW items
+    editSaleItems.forEach(item=>{
+        const p=products.find(x=>x.id===item.productId);
+        if(p){const v=p.variants.find(x=>x.name===item.variantName);if(v)v.stock-=item.qty;}
+    });
+    s.items=editSaleItems.map(i=>({...i}));
+    s.total=editSaleItems.reduce((a,i)=>a+i.price,0);
+    s.customer=document.getElementById('editCustomerName').value.trim();
+    const rawEditStatus=document.querySelector('input[name="editStatus"]:checked').value;
+    s.status=rawEditStatus.charAt(0).toUpperCase()+rawEditStatus.slice(1);
+    const editRawPT=s.status.toLowerCase()==='completed'?document.querySelector('input[name="editPaymentType"]:checked').value:'none';
+    s.paymentType=editRawPT==='none'?'none':editRawPT.charAt(0).toUpperCase()+editRawPT.slice(1);
+    s.amountPaid=s.status.toLowerCase()==='completed'?parseFloat(document.getElementById('editAmountPaid').value)||s.total:s.total;
+    s.change=s.amountPaid-s.total;
+    if(s.status.toLowerCase()==='loan') s.loanBalance=parseFloat(document.getElementById('editLoanAmount').value)||0;
+    localStorage.setItem('sales',JSON.stringify(sales));
+    localStorage.setItem('products',JSON.stringify(products));
+    closeModal('editSaleModal'); displaySales(); displayProducts(); updateDashboard(); showToast('Sale updated!');
+}
+
+function deleteSale(id){currentAction='deleteSale';currentItemId=id;document.getElementById('confirmMsg').textContent='Delete this sale?';document.getElementById('confirmOverlay').classList.add('active');}
+
+function markCompleted(id) {
+    const s=sales.find(x=>x.id===id); if(!s) return;
+    s.status='Completed'; if(s.paymentType==='none') s.paymentType='Cash'; s.loanBalance=0;
+    localStorage.setItem('sales',JSON.stringify(sales)); displaySales(); updateDashboard(); showToast('Marked as completed!');
+}
+
+function openTransferModal() {
+    document.getElementById('transferAmount').value=''; document.getElementById('transferError').style.display='none';
+    document.querySelector('input[name="transferDir"][value="cash-to-gcash"]').checked=true;
+    updateTransferUI(); document.getElementById('transferModal').classList.add('active');
+}
+
+function updateTransferUI() {
+    const dir=document.querySelector('input[name="transferDir"]:checked').value;
+    const isCtoG=dir==='cash-to-gcash';
+    setText('tfFrom',isCtoG?'Cash':'GCash'); setText('tfTo',isCtoG?'GCash':'Cash');
+    setText('tfCashBal',fmt(cashBalance)); setText('tfGcashBal',fmt(gcashBalance));
+    document.getElementById('transferError').style.display='none'; document.getElementById('transferAmount').value='';
+}
+
+function validateTransferAmount() {
+    const dir=document.querySelector('input[name="transferDir"]:checked').value;
+    const amount=parseFloat(document.getElementById('transferAmount').value)||0;
+    const avail=dir==='cash-to-gcash'?cashBalance:gcashBalance;
+    const errEl=document.getElementById('transferError');
+    if(amount>avail){errEl.textContent=`Insufficient. Available: ${fmt(avail)}`;errEl.style.display='block';}
+    else errEl.style.display='none';
+}
+
+function doTransfer() {
+    const dir=document.querySelector('input[name="transferDir"]:checked').value;
+    const amount=parseFloat(document.getElementById('transferAmount').value)||0;
+    if(amount<=0){showToast('Enter a valid amount');return;}
+    const avail=dir==='cash-to-gcash'?cashBalance:gcashBalance;
+    if(amount>avail){showToast('Insufficient balance');return;}
+    const transfers=JSON.parse(localStorage.getItem('transfers'))||[];
+    transfers.push({dir,amount,date:new Date().toISOString()});
+    localStorage.setItem('transfers',JSON.stringify(transfers));
+    closeModal('transferModal'); updateDashboard();
+    showToast(`Transferred ${fmt(amount)} ${dir==='cash-to-gcash'?'Cash → GCash':'GCash → Cash'}`);
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('active');}
+function setText(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
+function fmt(n){return '₱'+(parseFloat(n)||0).toFixed(2);}
+
+function confirmAction() {
+    if(currentAction==='deleteProduct'){
+        products=products.filter(p=>p.id!==currentItemId);
+        localStorage.setItem('products',JSON.stringify(products)); displayProducts(); updateDashboard(); showToast('Product deleted');
+    } else if(currentAction==='deleteSale'){
+        const s=sales.find(x=>x.id===currentItemId);
+        if(s){s.items.forEach(item=>{const p=products.find(x=>x.id===item.productId);if(p){const v=p.variants.find(x=>x.name===item.variantName);if(v)v.stock+=item.qty;}});localStorage.setItem('products',JSON.stringify(products));}
+        sales=sales.filter(s=>s.id!==currentItemId);
+        localStorage.setItem('sales',JSON.stringify(sales)); displaySales(); displayProducts(); updateDashboard(); showToast('Sale deleted');
+    }
+    closeConfirm();
+}
+
+function closeConfirm(){document.getElementById('confirmOverlay').classList.remove('active');currentAction=currentItemId=null;}
+
+init();
+</script>
+</body>
+</html>
