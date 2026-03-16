@@ -249,6 +249,8 @@
         }
         .modal.active { background:rgba(0,0,0,0.45); pointer-events:all; }
         .modal.closing { background:rgba(0,0,0,0); pointer-events:none; }
+        /* Product modal: solid background to prevent cream gap */
+        #productModal.active { background:rgba(0,0,0,0.8); }
         .modal-sheet {
             background:#f5efe8; width:min(100%,430px); max-height:calc(100dvh - 60px - var(--safe-top));
             overflow-y:auto; border-radius:28px 28px 0 0; padding:0 20px 0;
@@ -1522,81 +1524,38 @@ init();
 // When keyboard shows, push modal sheet up so footer stays above keyboard.
 // When keyboard hides, force-clear all offsets instantly so no excess cream shows.
 if (window.visualViewport) {
-    let lastDiff = 0;
-    let lastKeyboardState = false;
-    let resizeTimeout;
-    
     function _handleVPResize() {
-        const vh = window.visualViewport.height;
+        const vh  = window.visualViewport.height;
         const off = window.visualViewport.offsetTop || 0;
         const diff = Math.max(0, window.innerHeight - vh - off);
         const keyboardUp = diff > 80;
-        
-        // Clear any pending timeout
-        if (resizeTimeout) clearTimeout(resizeTimeout);
-        
+
         document.querySelectorAll('.modal.active').forEach(modal => {
             const sheet = modal.querySelector('.modal-sheet');
             if (!sheet) return;
             
+            // All modals: push up when keyboard shows
             if (keyboardUp) {
-                // Keyboard is visible - push up
-                sheet.style.transition = 'margin-bottom 0.2s ease-out';
                 sheet.style.marginBottom = diff + 'px';
-                lastDiff = diff;
-                lastKeyboardState = true;
             } else {
-                // Keyboard just hid
-                if (lastKeyboardState) {
-                    // Immediately remove margin
-                    sheet.style.transition = 'none';
-                    sheet.style.marginBottom = '0px';
-                    
-                    // Force reflow
-                    void sheet.offsetHeight;
-                    
-                    // Restore transition after a tiny delay
-                    resizeTimeout = setTimeout(() => {
-                        sheet.style.transition = '';
-                        sheet.style.marginBottom = '';
-                        sheet.style.paddingBottom = '';
-                    }, 50);
-                    
-                    lastKeyboardState = false;
-                }
+                // Force instant removal — suppress transition and clear all offsets
+                sheet.style.transition = 'transform .32s cubic-bezier(.32,.72,0,1)';
+                sheet.style.marginBottom = '0px';
+                sheet.style.paddingBottom = '0px';
+                // Force layout recalc to remove excess cream
+                void sheet.offsetHeight;
+                // Then clear inline styles
+                requestAnimationFrame(() => {
+                    sheet.style.transition = '';
+                    sheet.style.marginBottom = '';
+                    sheet.style.paddingBottom = '';
+                });
             }
         });
     }
-    
+
     window.visualViewport.addEventListener('resize', _handleVPResize);
     window.visualViewport.addEventListener('scroll', _handleVPResize);
-    
-    // Also handle focus events as a backup
-    document.addEventListener('focusin', (e) => {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
-            // Input focused - keyboard will show
-        }
-    });
-    
-    document.addEventListener('focusout', (e) => {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
-            // Input blurred - keyboard might hide
-            // Force a final cleanup after a tiny delay
-            setTimeout(() => {
-                if (window.visualViewport && window.visualViewport.height === window.innerHeight) {
-                    document.querySelectorAll('.modal .modal-sheet').forEach(sheet => {
-                        sheet.style.transition = 'none';
-                        sheet.style.marginBottom = '0px';
-                        void sheet.offsetHeight;
-                        setTimeout(() => {
-                            sheet.style.transition = '';
-                            sheet.style.marginBottom = '';
-                        }, 50);
-                    });
-                }
-            }, 100);
-        }
-    });
 }
 
 </script>
