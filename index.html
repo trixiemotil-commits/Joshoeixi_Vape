@@ -251,7 +251,7 @@
         .modal.closing { background:rgba(0,0,0,0); pointer-events:none; }
         .modal-sheet {
             background:#f5efe8; width:min(100%,430px); max-height:calc(100dvh - 60px - var(--safe-top));
-            overflow-y:auto; border-radius:28px 28px 0 0; padding:0 20px calc(16px + var(--safe-bottom));
+            overflow-y:auto; border-radius:28px 28px 0 0; padding:0 20px 0;
             transform:translateY(100%); transition:transform .32s cubic-bezier(.32,.72,0,1);
             pointer-events:all; will-change:transform;
         }
@@ -337,12 +337,13 @@
         /* Modal footer */
         .modal-footer {
             position: sticky;
-            bottom: -20px;
+            bottom: 0;
             background: #f5efe8;
             border-top: 1px solid rgba(93,58,44,0.14);
             display: flex;
             gap: 10px;
-            padding: 14px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+            padding: 14px 20px;
+            padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
             margin: 20px -20px 0;
             z-index: 3;
         }
@@ -1483,29 +1484,34 @@ init();
 // ── iOS visual viewport keyboard fix ─────────────────────────────
 // When the keyboard shows/hides, snap the modal sheet bottom padding
 // so the maroon never bleeds through below the sheet.
+// ── iOS visual viewport keyboard fix ─────────────────────────────
 if (window.visualViewport) {
-    let _lastVH = window.visualViewport.height;
-    window.visualViewport.addEventListener('resize', () => {
+    function _handleVPResize() {
         const vh = window.visualViewport.height;
-        const diff = window.innerHeight - vh; // how much keyboard takes
-        // Push open modal sheets up by keyboard height, but skip Add Product modal.
-        document.querySelectorAll('.modal.active:not(#productModal) .modal-sheet').forEach(sheet => {
-            sheet.style.marginBottom = diff > 50 ? diff + 'px' : '';
-        });
-        const productSheet = document.querySelector('#productModal.active .modal-sheet');
-        if (productSheet) productSheet.style.marginBottom = '';
-        // When keyboard gone, ensure bottom-nav is back
-        if (diff < 50) {
-            document.querySelectorAll('.modal.active .modal-sheet').forEach(s => s.style.marginBottom = '');
-        }
-        _lastVH = vh;
-    });
-    // Also fire on scroll to catch Safari's weird resize events
-    window.visualViewport.addEventListener('scroll', () => {
+        const offsetY = window.visualViewport.offsetTop || 0;
+        const diff = window.innerHeight - vh - offsetY;
+        const keyboardUp = diff > 80;
+
         document.querySelectorAll('.modal.active .modal-sheet').forEach(sheet => {
-            sheet.style.marginBottom = '';
+            if (keyboardUp) {
+                // Slide sheet up so footer stays above keyboard
+                sheet.style.transform = `translateY(-${diff}px)`;
+                sheet.style.transition = 'transform .15s ease';
+            } else {
+                // Keyboard gone — snap back, then restore normal transition
+                sheet.style.transform = 'translateY(0)';
+                sheet.style.transition = 'transform .22s ease';
+                // After snap, let CSS handle it again
+                setTimeout(() => {
+                    sheet.style.transform = '';
+                    sheet.style.transition = '';
+                }, 240);
+            }
         });
-    });
+    }
+
+    window.visualViewport.addEventListener('resize', _handleVPResize);
+    window.visualViewport.addEventListener('scroll', _handleVPResize);
 }
 
 </script>
