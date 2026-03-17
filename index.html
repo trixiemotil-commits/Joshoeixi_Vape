@@ -32,6 +32,7 @@
     window.db_saveSale      = s  => setDoc(doc(db, 'sales',     s.id),  s);
     window.db_deleteSale    = id => deleteDoc(doc(db, 'sales',    id));
     window.db_saveTransfer  = t  => setDoc(doc(db, 'transfers', t.id),  t);
+    window.db_deleteTransfer = id => deleteDoc(doc(db, 'transfers', id));
     let _ready = { products: false, sales: false, transfers: false };
     function checkAllReady() {
         if (_ready.products && _ready.sales && _ready.transfers) {
@@ -569,15 +570,17 @@
         <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;">
             <div style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:0 14px;height:44px;display:flex;align-items:center;gap:8px;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9d8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                <input type="date" id="recordDateFrom" class="form-input" style="border:none;background:transparent;height:auto;padding:0;font-size:13px;color:var(--ink);flex:1;" onchange="displayRecords()">
+                <input type="date" id="recordDateFrom" class="form-input" style="border:none;background:transparent;height:auto;padding:0;font-size:13px;color:var(--ink);flex:1;" onchange="displayRecords()" placeholder="From date">
             </div>
             <div style="color:var(--gray);font-size:13px;font-weight:500;flex-shrink:0;">to</div>
             <div style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:0 14px;height:44px;display:flex;align-items:center;gap:8px;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9d8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                <input type="date" id="recordDateTo" class="form-input" style="border:none;background:transparent;height:auto;padding:0;font-size:13px;color:var(--ink);flex:1;" onchange="displayRecords()">
+                <input type="date" id="recordDateTo" class="form-input" style="border:none;background:transparent;height:auto;padding:0;font-size:13px;color:var(--ink);flex:1;" onchange="displayRecords()" placeholder="To date">
             </div>
             <button onclick="clearRecordFilter()" style="height:44px;padding:0 12px;border-radius:var(--radius-md);background:var(--surface-soft);border:1px solid var(--border);font-size:12px;font-weight:600;color:var(--gray);font-family:Poppins,sans-serif;cursor:pointer;flex-shrink:0;">Clear</button>
         </div>
+        <!-- Total Funds per Account -->
+        <div id="totalFundsCards" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;"></div>
         <!-- Summary strip -->
         <div id="recordsSummary" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;"></div>
         <!-- Records list -->
@@ -801,6 +804,37 @@
         <div class="modal-footer">
             <button class="btn-cancel-modal" onclick="closeModal('transferModal')">Cancel</button>
             <button class="btn-save-modal" onclick="doTransfer()">Transfer</button>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT TRANSFER -->
+<div id="editTransferModal" class="modal">
+    <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-hdr">
+            <h2>Edit Transfer</h2>
+            <button class="modal-close" onclick="closeModal('editTransferModal')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="form-group">
+            <label>Direction</label>
+            <div class="toggle-group two-col">
+                <label class="toggle-opt"><input type="radio" name="editTransferDir" value="cash-to-gcash" checked><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span>Cash → GCash</span></span></label>
+                <label class="toggle-opt"><input type="radio" name="editTransferDir" value="gcash-to-cash"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg><span>GCash → Cash</span></span></label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Amount (₱)</label>
+            <input type="number" id="editTransferAmount" class="form-input" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-group">
+            <label>Note <span style="font-weight:400;color:var(--gray);">(optional)</span></label>
+            <input type="text" id="editTransferNote" class="form-input" placeholder="e.g. Online payment, Bills, etc.">
+        </div>
+        <input type="hidden" id="editTransferId">
+        <div class="modal-footer">
+            <button class="btn-cancel-modal" onclick="closeModal('editTransferModal')">Cancel</button>
+            <button class="btn-save-modal" onclick="saveEditTransfer()">Save Changes</button>
         </div>
     </div>
 </div>
@@ -1403,6 +1437,12 @@ function confirmAction() {
             const saves=[window.db_deleteSale(delSaleId),...affectedProds.map(p=>window.db_saveProduct(p))];
             Promise.all(saves).then(()=>showToast('Sale deleted')).catch(e=>showToast('Error: '+e.message));
         } else{displaySales();displayProducts();updateDashboard();showToast('Sale deleted');}
+    } else if(currentAction==='deleteTransfer'){
+        const delId = currentItemId;
+        window._transfers = (window._transfers||[]).filter(t=>t.id!==delId);
+        if(window.db_deleteTransfer){
+            window.db_deleteTransfer(delId).then(()=>{ updateDashboard(); displayRecords(); showToast('Transfer deleted'); }).catch(e=>showToast('Error: '+e.message));
+        } else { updateDashboard(); displayRecords(); showToast('Transfer deleted'); }
     }
     closeConfirm();
 }
@@ -1427,12 +1467,36 @@ function displayRecords() {
     if (from) list = list.filter(t => new Date(t.date) >= from);
     if (to)   list = list.filter(t => new Date(t.date) <= to);
 
-    // Summary strip
+    // ── Total funds per account (always from ALL transfers, not filtered) ──
+    const fundsEl = document.getElementById('totalFundsCards');
+    if (fundsEl) {
+        fundsEl.innerHTML = `
+            <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid #d97706;border-radius:var(--radius-lg);padding:16px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                    <div style="width:32px;height:32px;border-radius:9px;background:#fef3c7;display:flex;align-items:center;justify-content:center;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                    </div>
+                    <span style="font-size:13px;font-weight:600;color:var(--gray);">Cash Balance</span>
+                </div>
+                <div style="font-size:22px;font-weight:700;color:var(--ink);">${fmt(cashBalance)}</div>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid #7c5de6;border-radius:var(--radius-lg);padding:16px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                    <div style="width:32px;height:32px;border-radius:9px;background:#ede9fd;display:flex;align-items:center;justify-content:center;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c5de6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                    </div>
+                    <span style="font-size:13px;font-weight:600;color:var(--gray);">GCash Balance</span>
+                </div>
+                <div style="font-size:22px;font-weight:700;color:var(--ink);">${fmt(gcashBalance)}</div>
+            </div>`;
+    }
+
+    // Summary strip (filtered)
     const sumEl = document.getElementById('recordsSummary');
     if (sumEl) {
-        const totalCount   = list.length;
-        const totalCtoG    = list.filter(t=>t.dir==='cash-to-gcash').reduce((a,t)=>a+t.amount,0);
-        const totalGtoC    = list.filter(t=>t.dir==='gcash-to-cash').reduce((a,t)=>a+t.amount,0);
+        const totalCount = list.length;
+        const totalCtoG  = list.filter(t=>t.dir==='cash-to-gcash').reduce((a,t)=>a+t.amount,0);
+        const totalGtoC  = list.filter(t=>t.dir==='gcash-to-cash').reduce((a,t)=>a+t.amount,0);
         sumEl.innerHTML = `
             <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 10px;text-align:center;">
                 <div style="font-size:11px;color:var(--gray);font-weight:500;margin-bottom:4px;">Transfers</div>
@@ -1468,26 +1532,27 @@ function displayRecords() {
         const dayTotal = txns.reduce((a,t)=>a+t.amount,0);
         out += `<div class="record-date-group">${dateLabel} <span style="font-weight:500;color:var(--maroon);margin-left:4px;">${fmt(dayTotal)}</span></div>`;
         txns.forEach(t => {
-            const isCtoG = t.dir==='cash-to-gcash';
-            const time   = new Date(t.date).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
-            const dirLabel = isCtoG ? 'Cash → GCash' : 'GCash → Cash';
+            const isCtoG     = t.dir==='cash-to-gcash';
+            const time       = new Date(t.date).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
+            const dirLabel   = isCtoG ? 'Cash → GCash' : 'GCash → Cash';
             const arrowColor = isCtoG ? '#7c5de6' : '#059669';
-            const noteHtml = t.note ? `<div style="font-size:12px;color:var(--gray);border-top:1px solid rgba(93,58,44,0.1);padding-top:6px;margin-top:6px;">📝 ${t.note}</div>` : '';
+            const noteLine   = t.note ? `<div style="font-size:12px;color:var(--gray);border-top:1px solid rgba(93,58,44,0.1);padding-top:6px;margin-top:6px;">📝 ${t.note}</div>` : '';
             out += `<div class="record-card">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <div>
+                    <div style="flex:1;">
                         <div style="font-size:14px;font-weight:700;color:var(--ink);">${dirLabel}</div>
                         <div style="font-size:12px;color:var(--gray);margin-top:2px;">${time}</div>
                     </div>
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <div style="text-align:right;">
-                            <div style="font-size:16px;font-weight:700;color:${arrowColor};">${fmt(t.amount)}</div>
-                        </div>
-                        <div style="width:32px;height:32px;border-radius:50%;background:${isCtoG?'#ede9fd':'#d1fae5'};display:flex;align-items:center;justify-content:center;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${arrowColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="${isCtoG?'17 1 21 5 17 9':'7 23 3 19 7 15'}"/><path d="${isCtoG?'M3 11V9a4 4 0 0 1 4-4h14':'M21 13v2a4 4 0 0 1-4 4H3'}"/></svg>
-                        </div>
+                    <div style="font-size:17px;font-weight:700;color:${arrowColor};margin-right:10px;">${fmt(t.amount)}</div>
+                    <div style="display:flex;gap:6px;">
+                        <button onclick="openEditTransferModal('${t.id}')" style="width:32px;height:32px;border-radius:9px;border:none;background:#efe2d3;color:var(--maroon);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button onclick="deleteTransfer('${t.id}')" style="width:32px;height:32px;border-radius:9px;border:none;background:#f4e0df;color:#9d1525;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                        </button>
                     </div>
-                </div>${noteHtml}
+                </div>${noteLine}
             </div>`;
         });
     });
@@ -1500,6 +1565,47 @@ function clearRecordFilter() {
     if (f) f.value = '';
     if (t) t.value = '';
     displayRecords();
+}
+
+function openEditTransferModal(id) {
+    const t = (window._transfers||[]).find(x=>x.id===id);
+    if (!t) return;
+    document.getElementById('editTransferId').value = id;
+    document.querySelector(`input[name="editTransferDir"][value="${t.dir}"]`).checked = true;
+    document.getElementById('editTransferAmount').value = t.amount;
+    document.getElementById('editTransferNote').value = t.note || '';
+    openModal('editTransferModal');
+}
+
+function saveEditTransfer() {
+    const id     = document.getElementById('editTransferId').value;
+    const dir    = document.querySelector('input[name="editTransferDir"]:checked').value;
+    const amount = parseFloat(document.getElementById('editTransferAmount').value)||0;
+    const note   = (document.getElementById('editTransferNote')?.value||'').trim();
+    if (amount <= 0) { showToast('Enter a valid amount'); return; }
+    const idx = (window._transfers||[]).findIndex(x=>x.id===id);
+    if (idx < 0) return;
+    const updated = {...window._transfers[idx], dir, amount, note};
+    window._transfers[idx] = updated;
+    if (window.db_saveTransfer) {
+        window.db_saveTransfer(updated).then(()=>{
+            closeModal('editTransferModal');
+            updateDashboard();
+            showToast('Transfer updated!');
+        }).catch(e=>showToast('Error: '+e.message));
+    } else {
+        closeModal('editTransferModal');
+        updateDashboard();
+        displayRecords();
+        showToast('Transfer updated!');
+    }
+}
+
+function deleteTransfer(id) {
+    currentAction = 'deleteTransfer';
+    currentItemId = id;
+    document.getElementById('confirmMsg').textContent = 'Delete this transfer record?';
+    document.getElementById('confirmOverlay').classList.add('active');
 }
 
 // ── Keyboard + input centering fix for modals ─────────────────────
