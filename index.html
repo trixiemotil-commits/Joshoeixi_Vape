@@ -58,6 +58,7 @@
         _ready.transfers = true;
         checkAllReady();
         if (typeof updateDashboard === 'function') updateDashboard();
+        if (typeof displayRecords === 'function') displayRecords();
     });
     </script>
     <style>
@@ -562,7 +563,7 @@
     <!-- RECORDS -->
     <div id="records-page" class="page">
         <div class="page-header" style="margin-bottom:12px;">
-            <h1>Records</h1>
+            <h1>Transfer Records</h1>
         </div>
         <!-- Filter bar -->
         <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;">
@@ -792,6 +793,10 @@
             <label>Amount to Transfer (₱)</label>
             <input type="number" id="transferAmount" class="form-input" step="0.01" placeholder="0.00" oninput="validateTransferAmount()">
             <div id="transferError" style="color:#dc2626;font-size:12px;margin-top:6px;display:none;"></div>
+        </div>
+        <div class="form-group">
+            <label>Note <span style="font-weight:400;color:var(--gray);">(optional)</span></label>
+            <input type="text" id="transferNote" class="form-input" placeholder="e.g. Online payment, Bills, etc.">
         </div>
         <div class="modal-footer">
             <button class="btn-cancel-modal" onclick="closeModal('transferModal')">Cancel</button>
@@ -1345,6 +1350,7 @@ function markCompleted(id) {
 
 function openTransferModal() {
     document.getElementById('transferAmount').value=''; document.getElementById('transferError').style.display='none';
+    document.getElementById('transferNote').value='';
     document.querySelector('input[name="transferDir"][value="cash-to-gcash"]').checked=true;
     updateTransferUI();
     openModal('transferModal');
@@ -1370,7 +1376,8 @@ function doTransfer() {
     if(amount<=0){showToast('Enter a valid amount');return;}
     const avail=dir==='cash-to-gcash'?cashBalance:gcashBalance;
     if(amount>avail){showToast('Insufficient balance');return;}
-    const transfer={id:Date.now().toString(),dir,amount,date:new Date().toISOString()};
+    const note=(document.getElementById('transferNote')?.value||'').trim();
+    const transfer={id:Date.now().toString(),dir,amount,date:new Date().toISOString(),note};
     window._transfers=[...(window._transfers||[]),transfer];
     if(window.db_saveTransfer){
         window.db_saveTransfer(transfer).then(()=>{ closeModal('transferModal'); updateDashboard(); showToast(`Transferred ${fmt(amount)} ${dir==='cash-to-gcash'?'Cash → GCash':'GCash → Cash'}`); }).catch(e=>{showToast('Save failed: '+e.message);});
@@ -1415,76 +1422,76 @@ function displayRecords() {
     const from = fromVal ? new Date(fromVal + 'T00:00:00') : null;
     const to   = toVal   ? new Date(toVal   + 'T23:59:59') : null;
 
-    let list = [...sales].sort((a,b)=>new Date(b.date)-new Date(a.date));
-    if (from) list = list.filter(s => new Date(s.date) >= from);
-    if (to)   list = list.filter(s => new Date(s.date) <= to);
+    // Work from transfers list
+    let list = [...(window._transfers||[])].sort((a,b)=>new Date(b.date)-new Date(a.date));
+    if (from) list = list.filter(t => new Date(t.date) >= from);
+    if (to)   list = list.filter(t => new Date(t.date) <= to);
 
     // Summary strip
     const sumEl = document.getElementById('recordsSummary');
     if (sumEl) {
-        const completed = list.filter(s=>s.status.toLowerCase()==='completed');
-        const totalRev  = completed.reduce((a,s)=>a+s.total,0);
-        const totalTxn  = list.length;
-        const totalProfit = completed.reduce((a,s)=>a+s.items.reduce((b,item)=>{
-            const p=products.find(x=>x.id===item.productId); return p?b+(p.sellingPrice-p.rawPrice)*item.qty:b;
-        },0),0);
+        const totalCount   = list.length;
+        const totalCtoG    = list.filter(t=>t.dir==='cash-to-gcash').reduce((a,t)=>a+t.amount,0);
+        const totalGtoC    = list.filter(t=>t.dir==='gcash-to-cash').reduce((a,t)=>a+t.amount,0);
         sumEl.innerHTML = `
             <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 10px;text-align:center;">
-                <div style="font-size:11px;color:var(--gray);font-weight:500;margin-bottom:4px;">Transactions</div>
-                <div style="font-size:20px;font-weight:700;color:var(--ink);">${totalTxn}</div>
+                <div style="font-size:11px;color:var(--gray);font-weight:500;margin-bottom:4px;">Transfers</div>
+                <div style="font-size:20px;font-weight:700;color:var(--ink);">${totalCount}</div>
             </div>
             <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 10px;text-align:center;">
-                <div style="font-size:11px;color:var(--gray);font-weight:500;margin-bottom:4px;">Revenue</div>
-                <div style="font-size:15px;font-weight:700;color:#059669;">${fmt(totalRev)}</div>
+                <div style="font-size:11px;color:var(--gray);font-weight:500;margin-bottom:4px;">Cash→GCash</div>
+                <div style="font-size:13px;font-weight:700;color:#7c5de6;">${fmt(totalCtoG)}</div>
             </div>
             <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 10px;text-align:center;">
-                <div style="font-size:11px;color:var(--gray);font-weight:500;margin-bottom:4px;">Profit</div>
-                <div style="font-size:15px;font-weight:700;color:var(--maroon);">${fmt(totalProfit)}</div>
+                <div style="font-size:11px;color:var(--gray);font-weight:500;margin-bottom:4px;">GCash→Cash</div>
+                <div style="font-size:13px;font-weight:700;color:#059669;">${fmt(totalGtoC)}</div>
             </div>`;
     }
 
     const container = document.getElementById('recordsList');
     if (!list.length) {
-        container.innerHTML = '<div class="empty-state"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8b7355" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><div class="es-title">No records found</div><div class="es-sub">Adjust the date filter or add sales</div></div>';
+        container.innerHTML = '<div class="empty-state"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8b7355" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg><div class="es-title">No transfers found</div><div class="es-sub">Transfer funds between Cash and GCash to see records here</div></div>';
         return;
     }
 
     // Group by date
     const groups = {};
-    list.forEach(s => {
-        const d = new Date(s.date);
+    list.forEach(t => {
+        const d = new Date(t.date);
         const key = d.toLocaleDateString('en-PH', {weekday:'short', year:'numeric', month:'short', day:'numeric'});
         if (!groups[key]) groups[key] = [];
-        groups[key].push(s);
+        groups[key].push(t);
     });
 
-    let html = '';
+    let out = '';
     Object.entries(groups).forEach(([dateLabel, txns]) => {
-        const dayTotal = txns.filter(s=>s.status.toLowerCase()==='completed').reduce((a,s)=>a+s.total,0);
-        html += `<div class="record-date-group">${dateLabel} <span style="font-weight:500;color:var(--maroon);margin-left:4px;">${fmt(dayTotal)}</span></div>`;
-        txns.forEach(s => {
-            const statusLow = s.status.toLowerCase();
-            const badgeCls  = statusLow==='completed'?'rb-completed':statusLow==='reserved'?'rb-reserved':'rb-loan';
-            const time = new Date(s.date).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
-            const itemsSummary = s.items.map(i=>`${i.name} ×${i.qty}`).join(', ');
-            const loanBadge = statusLow==='loan' && s.loanBalance>0
-                ? `<span style="font-size:11px;color:#dc2626;font-weight:600;margin-left:6px;">Bal: ${fmt(s.loanBalance)}</span>` : '';
-            html += `<div class="record-card">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+        const dayTotal = txns.reduce((a,t)=>a+t.amount,0);
+        out += `<div class="record-date-group">${dateLabel} <span style="font-weight:500;color:var(--maroon);margin-left:4px;">${fmt(dayTotal)}</span></div>`;
+        txns.forEach(t => {
+            const isCtoG = t.dir==='cash-to-gcash';
+            const time   = new Date(t.date).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
+            const dirLabel = isCtoG ? 'Cash → GCash' : 'GCash → Cash';
+            const arrowColor = isCtoG ? '#7c5de6' : '#059669';
+            const noteHtml = t.note ? `<div style="font-size:12px;color:var(--gray);border-top:1px solid rgba(93,58,44,0.1);padding-top:6px;margin-top:6px;">📝 ${t.note}</div>` : '';
+            out += `<div class="record-card">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
                     <div>
-                        <div style="font-size:15px;font-weight:700;color:var(--ink);">${s.customer}</div>
-                        <div style="font-size:12px;color:var(--gray);margin-top:2px;">${time} · ${s.paymentType==='none'?'N/A':s.paymentType}</div>
+                        <div style="font-size:14px;font-weight:700;color:var(--ink);">${dirLabel}</div>
+                        <div style="font-size:12px;color:var(--gray);margin-top:2px;">${time}</div>
                     </div>
-                    <div style="display:flex;align-items:center;gap:6px;">
-                        <span style="font-size:16px;font-weight:700;color:var(--maroon);">${fmt(s.total)}</span>
-                        <span class="record-badge ${badgeCls}">${s.status}</span>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div style="text-align:right;">
+                            <div style="font-size:16px;font-weight:700;color:${arrowColor};">${fmt(t.amount)}</div>
+                        </div>
+                        <div style="width:32px;height:32px;border-radius:50%;background:${isCtoG?'#ede9fd':'#d1fae5'};display:flex;align-items:center;justify-content:center;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${arrowColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="${isCtoG?'17 1 21 5 17 9':'7 23 3 19 7 15'}"/><path d="${isCtoG?'M3 11V9a4 4 0 0 1 4-4h14':'M21 13v2a4 4 0 0 1-4 4H3'}"/></svg>
+                        </div>
                     </div>
-                </div>
-                <div style="font-size:12px;color:var(--gray);border-top:1px solid rgba(93,58,44,0.1);padding-top:6px;">${itemsSummary}${loanBadge}</div>
+                </div>${noteHtml}
             </div>`;
         });
     });
-    container.innerHTML = html;
+    container.innerHTML = out;
 }
 
 function clearRecordFilter() {
