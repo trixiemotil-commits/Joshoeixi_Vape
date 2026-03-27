@@ -673,6 +673,10 @@
             <div id="saleItemsDisplay" class="sale-items-list"></div>
             <div id="itemPicker"></div>
         </div>
+        <div class="form-group">
+            <label>Discount (₱) <span style="font-weight:400;color:var(--gray);">(optional)</span></label>
+            <input type="number" id="saleDiscount" class="form-input" step="0.01" min="0" placeholder="0.00" oninput="updateSaleTotal()">
+        </div>
         <div class="total-row"><span class="tr-label">Total Amount</span><span class="tr-value" id="saleTotal">₱0.00</span></div>
         <div class="form-group">
             <label>Status</label>
@@ -1177,6 +1181,7 @@ function filterSalesByStatus(status,btn) { currentSaleStatus=status; document.qu
 function openAddSaleModal() {
     saleItems=[];
     document.getElementById('customerName').value=''; document.getElementById('amountPaid').value='';
+    document.getElementById('saleDiscount').value='';
     document.getElementById('changeAmount').value=''; document.getElementById('loanPaidNow').value=''; document.getElementById('loanBalance').value='';
     document.querySelector('input[name="status"][value="completed"]').checked=true;
     document.querySelector('input[name="paymentType"][value="cash"]').checked=true;
@@ -1221,8 +1226,21 @@ function renderSaleItems() {
     document.getElementById('saleItemsDisplay').innerHTML=saleItems.map((item,i)=>`<div class="sale-item-chip"><div class="sic-left"><div class="sic-name">${item.name}</div><div class="sic-meta">${item.variantName} • ×${item.qty}</div></div><span class="sic-price">${fmt(item.price)}</span><button class="sic-remove" onclick="removeSaleItem(${i})">×</button></div>`).join('');
 }
 function removeSaleItem(i){saleItems.splice(i,1);renderSaleItems();updateSaleTotal();}
+
+function getSaleSubtotal() {
+    return saleItems.reduce((a,i)=>a+i.price,0);
+}
+
+function getSaleDiscount() {
+    const subtotal = getSaleSubtotal();
+    const rawDiscount = parseFloat(document.getElementById('saleDiscount')?.value)||0;
+    return Math.min(Math.max(0, rawDiscount), subtotal);
+}
+
 function updateSaleTotal() {
-    const total=saleItems.reduce((a,i)=>a+i.price,0);
+    const subtotal=getSaleSubtotal();
+    const discount=getSaleDiscount();
+    const total=Math.max(0, subtotal-discount);
     document.getElementById('saleTotal').textContent=fmt(total);
     calculateChange(); calculateLoanBalance();
 }
@@ -1232,12 +1250,12 @@ function togglePaymentSection() {
     document.getElementById('loanSection').style.display=status==='loan'?'block':'none';
 }
 function calculateChange() {
-    const total=saleItems.reduce((a,i)=>a+i.price,0);
+    const total=Math.max(0, getSaleSubtotal()-getSaleDiscount());
     const paid=parseFloat(document.getElementById('amountPaid').value)||0;
     document.getElementById('changeAmount').value=fmt(paid-total);
 }
 function calculateLoanBalance() {
-    const total=saleItems.reduce((a,i)=>a+i.price,0);
+    const total=Math.max(0, getSaleSubtotal()-getSaleDiscount());
     const paidNow=parseFloat(document.getElementById('loanPaidNow').value)||0;
     document.getElementById('loanBalance').value=fmt(Math.max(0,total-paidNow));
 }
@@ -1245,7 +1263,9 @@ function calculateLoanBalance() {
 function reviewSale() {
     if(!document.getElementById('customerName').value.trim()){showToast('Enter customer name');return;}
     if(!saleItems.length){showToast('Add at least one item');return;}
-    const total=saleItems.reduce((a,i)=>a+i.price,0);
+    const subtotal=getSaleSubtotal();
+    const discount=getSaleDiscount();
+    const total=Math.max(0,subtotal-discount);
     const rawStatus=document.querySelector('input[name="status"]:checked').value;
     const status=rawStatus.charAt(0).toUpperCase()+rawStatus.slice(1);
     const rawPT=status.toLowerCase()==='completed'?document.querySelector('input[name="paymentType"]:checked').value:'none';
@@ -1253,9 +1273,9 @@ function reviewSale() {
     const amountPaid=status==='completed'?parseFloat(document.getElementById('amountPaid').value)||total:total;
     const loanPaidNow=status.toLowerCase()==='loan'?parseFloat(document.getElementById('loanPaidNow').value)||0:0;
     const loanBalance=status.toLowerCase()==='loan'?Math.max(0,total-loanPaidNow):0;
-    tempSale={id:Date.now().toString(),date:new Date().toISOString(),customer:document.getElementById('customerName').value.trim(),items:saleItems.map(i=>({...i})),total,paymentType,status,amountPaid,change:amountPaid-total,loanPaidNow,loanBalance};
+    tempSale={id:Date.now().toString(),date:new Date().toISOString(),customer:document.getElementById('customerName').value.trim(),items:saleItems.map(i=>({...i})),subtotal,discount,total,paymentType,status,amountPaid,change:amountPaid-total,loanPaidNow,loanBalance};
     const sc=document.getElementById('saleSummaryContent');
-    sc.innerHTML=`<div class="summary-block"><p><strong>Customer:</strong> ${tempSale.customer}</p><p><strong>Date:</strong> ${new Date().toLocaleString()}</p><p><strong>Status:</strong> ${tempSale.status}</p></div><div style="margin-bottom:14px;">${tempSale.items.map(i=>`<div class="si-row"><span class="si-name">${i.name} – ${i.variantName} ×${i.qty}</span><span class="si-price">${fmt(i.price)}</span></div>`).join('')}</div><div class="summary-total-box"><div class="stb-row"><span>Total</span><span>${fmt(tempSale.total)}</span></div><div class="stb-row"><span>Payment</span><span>${tempSale.paymentType==='none'?'N/A':tempSale.paymentType}</span></div>${tempSale.status==='Completed'?`<div class="stb-row"><span>Amount Paid</span><span>${fmt(tempSale.amountPaid)}</span></div><div class="stb-row"><span>Change</span><span>${fmt(tempSale.change)}</span></div>`:''}${tempSale.status==='Loan'?`<div class="stb-row"><span>Paid Now</span><span>${fmt(tempSale.loanPaidNow)}</span></div><div class="stb-row" style="color:#fca5a5;"><span>Loan Balance</span><span>${fmt(tempSale.loanBalance)}</span></div>`:''}</div>`;
+    sc.innerHTML=`<div class="summary-block"><p><strong>Customer:</strong> ${tempSale.customer}</p><p><strong>Date:</strong> ${new Date().toLocaleString()}</p><p><strong>Status:</strong> ${tempSale.status}</p></div><div style="margin-bottom:14px;">${tempSale.items.map(i=>`<div class="si-row"><span class="si-name">${i.name} – ${i.variantName} ×${i.qty}</span><span class="si-price">${fmt(i.price)}</span></div>`).join('')}</div><div class="summary-total-box"><div class="stb-row"><span>Subtotal</span><span>${fmt(tempSale.subtotal||tempSale.total)}</span></div><div class="stb-row"><span>Discount</span><span>-${fmt(tempSale.discount||0)}</span></div><div class="stb-row"><span>Total</span><span>${fmt(tempSale.total)}</span></div><div class="stb-row"><span>Payment</span><span>${tempSale.paymentType==='none'?'N/A':tempSale.paymentType}</span></div>${tempSale.status==='Completed'?`<div class="stb-row"><span>Amount Paid</span><span>${fmt(tempSale.amountPaid)}</span></div><div class="stb-row"><span>Change</span><span>${fmt(tempSale.change)}</span></div>`:''}${tempSale.status==='Loan'?`<div class="stb-row"><span>Paid Now</span><span>${fmt(tempSale.loanPaidNow)}</span></div><div class="stb-row" style="color:#fca5a5;"><span>Loan Balance</span><span>${fmt(tempSale.loanBalance)}</span></div>`:''}</div>`;
     closeModal('saleModal');
     openModal('saleSummaryModal');
 }
