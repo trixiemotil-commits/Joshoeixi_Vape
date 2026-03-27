@@ -279,7 +279,8 @@
         .toggle-opt:has(input[name="category"]:checked),
         .toggle-opt:has(input[name="paymentType"]:checked),
         .toggle-opt:has(input[name="editPaymentType"]:checked),
-        .toggle-opt:has(input[name="transferDir"]:checked) { background:var(--maroon); border-color:var(--maroon); color:#fff; }
+        .toggle-opt:has(input[name="transferDir"]:checked),
+        .toggle-opt:has(input[name="editTransferDir"]:checked) { background:var(--maroon); border-color:var(--maroon); color:#fff; }
         .toggle-opt:has(input[name="status"][value="completed"]:checked),
         .toggle-opt:has(input[name="editStatus"][value="completed"]:checked) { background:#059669; border-color:#059669; color:#fff; }
         .toggle-opt:has(input[name="status"][value="reserved"]:checked),
@@ -781,6 +782,8 @@
             <div class="toggle-group two-col">
                 <label class="toggle-opt"><input type="radio" name="transferDir" value="cash-to-gcash" checked onchange="updateTransferUI()"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span>Cash → GCash</span></span></label>
                 <label class="toggle-opt"><input type="radio" name="transferDir" value="gcash-to-cash" onchange="updateTransferUI()"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg><span>GCash → Cash</span></span></label>
+                <label class="toggle-opt"><input type="radio" name="transferDir" value="cash-expense" onchange="updateTransferUI()"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span>Cash → Expense</span></span></label>
+                <label class="toggle-opt"><input type="radio" name="transferDir" value="gcash-expense" onchange="updateTransferUI()"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg><span>GCash → Expense</span></span></label>
             </div>
         </div>
         <div class="balance-display">
@@ -821,6 +824,8 @@
             <div class="toggle-group two-col">
                 <label class="toggle-opt"><input type="radio" name="editTransferDir" value="cash-to-gcash" checked><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span>Cash → GCash</span></span></label>
                 <label class="toggle-opt"><input type="radio" name="editTransferDir" value="gcash-to-cash"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg><span>GCash → Cash</span></span></label>
+                <label class="toggle-opt"><input type="radio" name="editTransferDir" value="cash-expense"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span>Cash → Expense</span></span></label>
+                <label class="toggle-opt"><input type="radio" name="editTransferDir" value="gcash-expense"><span class="toggle-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg><span>GCash → Expense</span></span></label>
             </div>
         </div>
         <div class="form-group">
@@ -950,7 +955,9 @@ function updateDashboard() {
     const transfers = window._transfers || [];
     transfers.forEach(t => {
         if (t.dir==='cash-to-gcash') { cashBalance-=t.amount; gcashBalance+=t.amount; }
-        else { gcashBalance-=t.amount; cashBalance+=t.amount; }
+        else if (t.dir==='gcash-to-cash') { gcashBalance-=t.amount; cashBalance+=t.amount; }
+        else if (t.dir==='cash-expense') { cashBalance-=t.amount; }
+        else if (t.dir==='gcash-expense') { gcashBalance-=t.amount; }
     });
     setText('totalStocks',totalStocks); setText('inventoryValue',fmt(inventoryValue));
     setText('totalRevenue',fmt(totalRevenue)); setText('totalProfit',fmt(totalProfit));
@@ -1139,7 +1146,9 @@ function updateSalesStats() {
     let gb = completed.filter(s=>s.paymentType==='gcash'||s.paymentType==='GCash'||s.paymentType==='Gcash').reduce((a,s)=>a+s.total,0);
     (window._transfers||[]).forEach(t=>{
         if(t.dir==='cash-to-gcash'){cb-=t.amount;gb+=t.amount;}
-        else{gb-=t.amount;cb+=t.amount;}
+        else if(t.dir==='gcash-to-cash'){gb-=t.amount;cb+=t.amount;}
+        else if(t.dir==='cash-expense'){cb-=t.amount;}
+        else if(t.dir==='gcash-expense'){gb-=t.amount;}
     });
     setText('salesTransactions',sales.length);
     setText('salesRevenue',fmt(completed.reduce((a,s)=>a+s.total,0)));
@@ -1391,15 +1400,27 @@ function openTransferModal() {
 }
 function updateTransferUI() {
     const dir=document.querySelector('input[name="transferDir"]:checked').value;
-    const isCtoG=dir==='cash-to-gcash';
-    setText('tfFrom',isCtoG?'Cash':'GCash'); setText('tfTo',isCtoG?'GCash':'Cash');
+    const fromMap={
+        'cash-to-gcash':'Cash',
+        'gcash-to-cash':'GCash',
+        'cash-expense':'Cash',
+        'gcash-expense':'GCash'
+    };
+    const toMap={
+        'cash-to-gcash':'GCash',
+        'gcash-to-cash':'Cash',
+        'cash-expense':'Expense',
+        'gcash-expense':'Expense'
+    };
+    setText('tfFrom',fromMap[dir]||'Cash');
+    setText('tfTo',toMap[dir]||'GCash');
     setText('tfCashBal',fmt(cashBalance)); setText('tfGcashBal',fmt(gcashBalance));
     document.getElementById('transferError').style.display='none'; document.getElementById('transferAmount').value='';
 }
 function validateTransferAmount() {
     const dir=document.querySelector('input[name="transferDir"]:checked').value;
     const amount=parseFloat(document.getElementById('transferAmount').value)||0;
-    const avail=dir==='cash-to-gcash'?cashBalance:gcashBalance;
+    const avail=(dir==='cash-to-gcash'||dir==='cash-expense')?cashBalance:gcashBalance;
     const errEl=document.getElementById('transferError');
     if(amount>avail){errEl.textContent=`Insufficient. Available: ${fmt(avail)}`;errEl.style.display='block';}
     else errEl.style.display='none';
@@ -1408,16 +1429,22 @@ function doTransfer() {
     const dir=document.querySelector('input[name="transferDir"]:checked').value;
     const amount=parseFloat(document.getElementById('transferAmount').value)||0;
     if(amount<=0){showToast('Enter a valid amount');return;}
-    const avail=dir==='cash-to-gcash'?cashBalance:gcashBalance;
+    const avail=(dir==='cash-to-gcash'||dir==='cash-expense')?cashBalance:gcashBalance;
     if(amount>avail){showToast('Insufficient balance');return;}
     const note=(document.getElementById('transferNote')?.value||'').trim();
     const transfer={id:Date.now().toString(),dir,amount,date:new Date().toISOString(),note};
     window._transfers=[...(window._transfers||[]),transfer];
+    const dirLabelMap={
+        'cash-to-gcash':'Cash → GCash',
+        'gcash-to-cash':'GCash → Cash',
+        'cash-expense':'Cash → Expense',
+        'gcash-expense':'GCash → Expense'
+    };
     if(window.db_saveTransfer){
-        window.db_saveTransfer(transfer).then(()=>{ closeModal('transferModal'); updateDashboard(); showToast(`Transferred ${fmt(amount)} ${dir==='cash-to-gcash'?'Cash → GCash':'GCash → Cash'}`); }).catch(e=>{showToast('Save failed: '+e.message);});
+        window.db_saveTransfer(transfer).then(()=>{ closeModal('transferModal'); updateDashboard(); showToast(`Recorded ${fmt(amount)} ${dirLabelMap[dir]||''}`); }).catch(e=>{showToast('Save failed: '+e.message);});
     } else {
         closeModal('transferModal'); updateDashboard();
-        showToast(`Transferred ${fmt(amount)} ${dir==='cash-to-gcash'?'Cash → GCash':'GCash → Cash'}`);
+        showToast(`Recorded ${fmt(amount)} ${dirLabelMap[dir]||''}`);
     }
 }
 
@@ -1497,6 +1524,7 @@ function displayRecords() {
         const totalCount = list.length;
         const totalCtoG  = list.filter(t=>t.dir==='cash-to-gcash').reduce((a,t)=>a+t.amount,0);
         const totalGtoC  = list.filter(t=>t.dir==='gcash-to-cash').reduce((a,t)=>a+t.amount,0);
+        const totalExpense = list.filter(t=>t.dir==='cash-expense'||t.dir==='gcash-expense').reduce((a,t)=>a+t.amount,0);
         sumEl.innerHTML = `
             <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 10px;text-align:center;">
                 <div style="font-size:11px;color:var(--gray);font-weight:500;margin-bottom:4px;">Transfers</div>
@@ -1509,6 +1537,10 @@ function displayRecords() {
             <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 10px;text-align:center;">
                 <div style="font-size:11px;color:var(--gray);font-weight:500;margin-bottom:4px;">GCash→Cash</div>
                 <div style="font-size:13px;font-weight:700;color:#059669;">${fmt(totalGtoC)}</div>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 10px;text-align:center;">
+                <div style="font-size:11px;color:var(--gray);font-weight:500;margin-bottom:4px;">Expenses</div>
+                <div style="font-size:13px;font-weight:700;color:#dc2626;">${fmt(totalExpense)}</div>
             </div>`;
     }
 
@@ -1532,10 +1564,21 @@ function displayRecords() {
         const dayTotal = txns.reduce((a,t)=>a+t.amount,0);
         out += `<div class="record-date-group">${dateLabel} <span style="font-weight:500;color:var(--maroon);margin-left:4px;">${fmt(dayTotal)}</span></div>`;
         txns.forEach(t => {
-            const isCtoG     = t.dir==='cash-to-gcash';
             const time       = new Date(t.date).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
-            const dirLabel   = isCtoG ? 'Cash → GCash' : 'GCash → Cash';
-            const arrowColor = isCtoG ? '#7c5de6' : '#059669';
+            const dirLabelMap = {
+                'cash-to-gcash':'Cash → GCash',
+                'gcash-to-cash':'GCash → Cash',
+                'cash-expense':'Cash → Expense',
+                'gcash-expense':'GCash → Expense'
+            };
+            const dirColorMap = {
+                'cash-to-gcash':'#7c5de6',
+                'gcash-to-cash':'#059669',
+                'cash-expense':'#dc2626',
+                'gcash-expense':'#dc2626'
+            };
+            const dirLabel   = dirLabelMap[t.dir] || 'Transfer';
+            const arrowColor = dirColorMap[t.dir] || 'var(--maroon)';
             const noteLine   = t.note ? `<div style="font-size:12px;color:var(--gray);border-top:1px solid rgba(93,58,44,0.1);padding-top:6px;margin-top:6px;">📝 ${t.note}</div>` : '';
             out += `<div class="record-card">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
