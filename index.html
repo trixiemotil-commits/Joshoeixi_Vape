@@ -567,6 +567,11 @@
         <div class="page-header" style="margin-bottom:12px;">
             <h1>Transfer Records</h1>
         </div>
+        <div class="cat-tabs" style="margin-bottom:12px;">
+            <button class="tab-btn active" onclick="setRecordTxnType('all',this)">All</button>
+            <button class="tab-btn" onclick="setRecordTxnType('transfer',this)">Transfers</button>
+            <button class="tab-btn" onclick="setRecordTxnType('expense',this)">Expenses</button>
+        </div>
         <!-- Filter bar -->
         <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;">
             <div style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:0 14px;height:44px;display:flex;align-items:center;gap:8px;">
@@ -868,6 +873,7 @@ Object.defineProperty(window, 'sales',     { get: () => window._sales,     set: 
 
 let cashBalance = 0, gcashBalance = 0;
 let currentCategory = 'all', currentSaleStatus = 'all';
+let currentRecordTxnType = 'all';
 let currentAction = null, currentItemId = null, tempSale = null;
 let saleItems = [], pickerProductId = null, pickerVariant = null, pickerQty = 1;
 let editSaleItems = [], editPickerProductId = null, editPickerVariant = null, editPickerQty = 1;
@@ -1491,6 +1497,11 @@ function displayRecords() {
 
     // Work from transfers list
     let list = [...(window._transfers||[])].sort((a,b)=>new Date(b.date)-new Date(a.date));
+    if (currentRecordTxnType === 'transfer') {
+        list = list.filter(t => t.dir === 'cash-to-gcash' || t.dir === 'gcash-to-cash');
+    } else if (currentRecordTxnType === 'expense') {
+        list = list.filter(t => t.dir === 'cash-expense' || t.dir === 'gcash-expense');
+    }
     if (from) list = list.filter(t => new Date(t.date) >= from);
     if (to)   list = list.filter(t => new Date(t.date) <= to);
 
@@ -1607,6 +1618,13 @@ function clearRecordFilter() {
     const t = document.getElementById('recordDateTo');
     if (f) f.value = '';
     if (t) t.value = '';
+    displayRecords();
+}
+
+function setRecordTxnType(type, btn) {
+    currentRecordTxnType = type;
+    document.querySelectorAll('#records-page .cat-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
     displayRecords();
 }
 
