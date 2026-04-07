@@ -442,27 +442,12 @@
             </div>
         </div>
         <div class="section-card" style="padding:12px 12px 10px; margin-bottom:12px;">
-            <div class="cat-tabs" style="margin-bottom:8px;">
-                <button class="tab-btn active" onclick="setDashboardPeriod('all',this)">All</button>
-                <button class="tab-btn" onclick="setDashboardPeriod('today',this)">Today</button>
-                <button class="tab-btn" onclick="setDashboardPeriod('7d',this)">7D</button>
-                <button class="tab-btn" onclick="setDashboardPeriod('30d',this)">30D</button>
-                <button class="tab-btn" onclick="setDashboardPeriod('month',this)">Month</button>
-            </div>
-            <div class="cat-tabs" style="margin-bottom:8px;">
-                <button class="tab-btn active" onclick="setDashboardStatus('all',this)">All Status</button>
-                <button class="tab-btn" onclick="setDashboardStatus('completed',this)">Completed</button>
-                <button class="tab-btn" onclick="setDashboardStatus('reserved',this)">Reserved</button>
-                <button class="tab-btn" onclick="setDashboardStatus('loan',this)">Loan</button>
-            </div>
-            <div class="cat-tabs" style="margin-bottom:8px;">
-                <button class="tab-btn active" onclick="setDashboardPayment('all',this)">All Payment</button>
-                <button class="tab-btn" onclick="setDashboardPayment('cash',this)">Cash</button>
-                <button class="tab-btn" onclick="setDashboardPayment('gcash',this)">GCash</button>
-            </div>
             <div style="display:flex; gap:8px; align-items:center;">
-                <input type="date" id="dashDateFrom" class="form-input" style="height:40px;font-size:12px;" onchange="onDashboardDateFilterChange()">
-                <input type="date" id="dashDateTo" class="form-input" style="height:40px;font-size:12px;" onchange="onDashboardDateFilterChange()">
+                <select id="dashFilterType" class="form-input" style="height:40px;font-size:12px;" onchange="onDashboardFilterTypeChange()">
+                    <option value="month">By Month</option>
+                    <option value="year">By Year</option>
+                </select>
+                <select id="dashFilterValue" class="form-input" style="height:40px;font-size:12px;" onchange="onDashboardFilterValueChange()"></select>
                 <button onclick="clearDashboardFilters()" style="height:40px;padding:0 10px;border-radius:var(--radius-sm);background:var(--surface-soft);border:1px solid var(--border);font-size:12px;font-weight:600;color:var(--gray);font-family:Poppins,sans-serif;cursor:pointer;flex-shrink:0;">Clear</button>
             </div>
         </div>
@@ -519,7 +504,7 @@
                 </div>
             </div>
             <div class="total-row" style="margin-top:10px;">
-                <span class="tr-label">Total Money (Cash + GCash)</span>
+                <span class="tr-label">Total Money</span>
                 <span class="tr-value" id="totalMoney">₱0.00</span>
             </div>
             <button class="transfer-btn" onclick="openTransferModal()">
@@ -915,7 +900,7 @@ Object.defineProperty(window, 'sales',     { get: () => window._sales,     set: 
 let cashBalance = 0, gcashBalance = 0;
 let currentCategory = 'all', currentSaleStatus = 'all';
 let currentRecordTxnType = 'all';
-let dashboardFilters = { period: 'all', status: 'all', payment: 'all' };
+let dashboardFilters = { mode: 'month', value: 'all' };
 let currentAction = null, currentItemId = null, tempSale = null;
 let saleItems = [], pickerProductId = null, pickerVariant = null, pickerQty = 1;
 let editSaleItems = [], editPickerProductId = null, editPickerVariant = null, editPickerQty = 1;
@@ -923,6 +908,7 @@ let editSaleItems = [], editPickerProductId = null, editPickerVariant = null, ed
 function init() {
     document.getElementById('variantsContainer').innerHTML = '';
     addVariant();
+    populateDashboardFilterValues();
 }
 
 function showToast(msg) {
@@ -988,56 +974,77 @@ function closeModal(id) {
     setTimeout(() => el.classList.remove('closing'), 340);
 }
 
-function getDashboardDateRange() {
-    const now = new Date();
-    const period = dashboardFilters.period;
-    let from = null;
-    let to = null;
-
-    if (period === 'today') {
-        from = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-        to = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
-    } else if (period === '7d') {
-        from = new Date(now);
-        from.setDate(from.getDate() - 6);
-        from.setHours(0, 0, 0, 0);
-        to = new Date(now);
-        to.setHours(23, 59, 59, 999);
-    } else if (period === '30d') {
-        from = new Date(now);
-        from.setDate(from.getDate() - 29);
-        from.setHours(0, 0, 0, 0);
-        to = new Date(now);
-        to.setHours(23, 59, 59, 999);
-    } else if (period === 'month') {
-        from = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
-        to = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-    }
-
-    const fromInput = document.getElementById('dashDateFrom')?.value;
-    const toInput = document.getElementById('dashDateTo')?.value;
-    if (fromInput) from = new Date(fromInput + 'T00:00:00');
-    if (toInput) to = new Date(toInput + 'T23:59:59');
-
-    return { from, to };
-}
-
 function applyDashboardSaleFilters(list) {
-    const { from, to } = getDashboardDateRange();
-    return list.filter(s => {
-        const status = (s.status || '').toLowerCase();
-        const payment = (s.paymentType || '').toLowerCase();
-        const saleDate = new Date(s.date);
+    const mode = dashboardFilters.mode;
+    const value = dashboardFilters.value;
+    if (value === 'all') return list;
 
-        if (dashboardFilters.status !== 'all' && status !== dashboardFilters.status) return false;
-        if (dashboardFilters.payment !== 'all' && payment !== dashboardFilters.payment) return false;
-        if (from && saleDate < from) return false;
-        if (to && saleDate > to) return false;
-        return true;
+    return list.filter(s => {
+        const saleDate = new Date(s.date);
+        const year = saleDate.getFullYear().toString();
+        const month = `${year}-${String(saleDate.getMonth()+1).padStart(2,'0')}`;
+
+        if (mode === 'year') return year === value;
+        return month === value;
     });
 }
 
+function populateDashboardFilterValues() {
+    const typeEl = document.getElementById('dashFilterType');
+    const valueEl = document.getElementById('dashFilterValue');
+    if (!typeEl || !valueEl) return;
+
+    const mode = typeEl.value || dashboardFilters.mode || 'month';
+    dashboardFilters.mode = mode;
+
+    const values = new Set();
+    (sales||[]).forEach(s => {
+        const d = new Date(s.date);
+        if (Number.isNaN(d.getTime())) return;
+        if (mode === 'year') {
+            values.add(d.getFullYear().toString());
+        } else {
+            values.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+        }
+    });
+
+    const sorted = Array.from(values).sort((a,b)=>a < b ? 1 : -1);
+    const keepValue = dashboardFilters.value;
+
+    valueEl.innerHTML = `<option value="all">All</option>` + sorted.map(v => {
+        if (mode === 'year') return `<option value="${v}">${v}</option>`;
+        const [y,m] = v.split('-');
+        const dt = new Date(parseInt(y,10), parseInt(m,10)-1, 1);
+        const label = dt.toLocaleDateString('en-PH',{month:'long',year:'numeric'});
+        return `<option value="${v}">${label}</option>`;
+    }).join('');
+
+    if (keepValue && (keepValue === 'all' || sorted.includes(keepValue))) {
+        valueEl.value = keepValue;
+    } else {
+        valueEl.value = 'all';
+        dashboardFilters.value = 'all';
+    }
+}
+
+function onDashboardFilterTypeChange() {
+    const typeEl = document.getElementById('dashFilterType');
+    if (!typeEl) return;
+    dashboardFilters.mode = typeEl.value;
+    dashboardFilters.value = 'all';
+    populateDashboardFilterValues();
+    updateDashboard();
+}
+
+function onDashboardFilterValueChange() {
+    const valueEl = document.getElementById('dashFilterValue');
+    if (!valueEl) return;
+    dashboardFilters.value = valueEl.value || 'all';
+    updateDashboard();
+}
+
 function updateDashboard() {
+    populateDashboardFilterValues();
     const totalStocks    = products.reduce((a,p)=>a+p.variants.reduce((s,v)=>s+v.stock,0),0);
     const podsStock      = products.filter(p=>p.category==='Pods').reduce((a,p)=>a+p.variants.reduce((s,v)=>s+v.stock,0),0);
     const batteryStock   = products.filter(p=>p.category==='Battery').reduce((a,p)=>a+p.variants.reduce((s,v)=>s+v.stock,0),0);
@@ -1087,44 +1094,13 @@ function updateDashboard() {
     }
 }
 
-function setDashboardPeriod(period, btn) {
-    dashboardFilters.period = period;
-    document.querySelectorAll('#dashboard-page .section-card .cat-tabs:nth-of-type(1) .tab-btn').forEach(b=>b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    updateDashboard();
-}
-
-function setDashboardStatus(status, btn) {
-    dashboardFilters.status = status;
-    document.querySelectorAll('#dashboard-page .section-card .cat-tabs:nth-of-type(2) .tab-btn').forEach(b=>b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    updateDashboard();
-}
-
-function setDashboardPayment(payment, btn) {
-    dashboardFilters.payment = payment;
-    document.querySelectorAll('#dashboard-page .section-card .cat-tabs:nth-of-type(3) .tab-btn').forEach(b=>b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    updateDashboard();
-}
-
-function onDashboardDateFilterChange() {
-    updateDashboard();
-}
-
 function clearDashboardFilters() {
-    dashboardFilters = { period: 'all', status: 'all', payment: 'all' };
-    const from = document.getElementById('dashDateFrom');
-    const to = document.getElementById('dashDateTo');
-    if (from) from.value = '';
-    if (to) to.value = '';
-    const firstCard = document.querySelector('#dashboard-page .section-card');
-    if (firstCard) {
-        const rows = firstCard.querySelectorAll('.cat-tabs');
-        rows.forEach(row => {
-            row.querySelectorAll('.tab-btn').forEach((btn, i) => btn.classList.toggle('active', i === 0));
-        });
-    }
+    dashboardFilters = { mode: 'month', value: 'all' };
+    const typeEl = document.getElementById('dashFilterType');
+    const valueEl = document.getElementById('dashFilterValue');
+    if (typeEl) typeEl.value = 'month';
+    if (valueEl) valueEl.value = 'all';
+    populateDashboardFilterValues();
     updateDashboard();
 }
 
